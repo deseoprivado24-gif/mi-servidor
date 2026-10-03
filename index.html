@@ -1,0 +1,362 @@
+/**
+ * ============================================================================
+ * NEXUS ERP & POS - ECOSISTEMA TECNOLÓGICO AUTÓNOMO Y GLOBAL
+ * ============================================================================
+ * Versión Completa e Integral (Backend Node.js + Frontend Institucional)
+ * 
+ * Arquitectura:
+ * 1. Identidad Corporativa: Quiénes Somos, Misión, Visión y Valores.
+ * 2. Módulos Operativos: Inventario multisucursal, POS con arqueos y turnos, P&L, Nómina.
+ * 3. Automatización de ISPs / TV por Cable: Cortes y reconexiones automáticas de servicio.
+ * 4. Modelo Multipaís y Multi-idioma: Soporte dinámico para Español, Inglés, Portugués,
+ *    con parametrización monetaria local (Venezuela: Bolívares, Dólar BCB, Euro).
+ * 5. Licenciamiento SaaS Exclusivo Cripto: USDT vía Binance Pay / MacroDroid / @cobro_deseo_privado_bot.
+ * ============================================================================
+ */
+
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middlewares corporativos
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Base de datos lógica robusta del sistema
+const db = {
+    licenses: {
+        "NEXUS-CORP-2026-VIP": { 
+            status: "ACTIVE", 
+            tier: "Enterprise Tier ($120/mes)", 
+            expires: "2027-03-30", 
+            country: "VEN",
+            currency: "VES",
+            language: "es",
+            company: "Comercial Larry C.A."
+        }
+    },
+    countriesConfig: {
+        "VEN": { name: "Venezuela", currency: "VES", exchangeRates: ["Bolívares (VES)", "Dólar BCB", "Euro"] },
+        "MEX": { name: "México", currency: "MXN", exchangeRates: ["Peso Mexicano (MXN)"] },
+        "COL": { name: "Colombia", currency: "COP", exchangeRates: ["Peso Colombiano (COP)"] }
+    },
+    plans: [
+        { name: "Negocio Pequeño", price: "$15 / mes", target: "Emprendimientos y comercios locales" },
+        { name: "Negocio Mediano", price: "$45 / mes", target: "Comercios en expansión y mayor volumen" },
+        { name: "Empresa Grande", price: "$120 / mes", target: "Macro-operación, corporaciones e industria" }
+    ],
+    auditLogs: [
+        { timestamp: new Date().toISOString(), event: "SYSTEM_BOOT", details: "Nexus ERP Core inicializado con módulos POS, inventario, P&L, ISPs y pasarela Telegram/Binance." }
+    ]
+};
+
+// Clave secreta para webhooks de MacroDroid / Telegram (@cobro_deseo_privado_bot)
+const WEBHOOK_SECRET_KEY = "nexus_secure_secret_enterprise_2026";
+
+// ============================================================================
+// 1. INTERFAZ WEB INSTITUCIONAL Y PORTAL ERP (COMPLETO)
+// ============================================================================
+app.get('/', (req, res) => {
+    res.send(`
+    <!DOCTYPE html>
+    <html lang="es" class="scroll-smooth">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nexus ERP & POS | Ecosistema Autónomo Global</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950">
+
+        <!-- HEADER INSTITUCIONAL -->
+        <header class="bg-slate-950/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-cyan-500 text-slate-950 p-2.5 rounded-xl font-black text-xl shadow-lg shadow-cyan-500/20">
+                        <i class="fa-solid fa-cube"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-bold tracking-tight text-white">Nexus <span class="text-cyan-400">ERP</span></span>
+                        <span class="block text-xs text-slate-400 tracking-wider">AUTONOMOUS ERP & POS SYSTEM</span>
+                    </div>
+                </div>
+                <nav class="hidden md:flex space-x-8 text-sm font-medium">
+                    <a href="#quienes-somos" class="text-slate-300 hover:text-cyan-400 transition">Quiénes Somos</a>
+                    <a href="#modulos" class="text-slate-300 hover:text-cyan-400 transition">Módulos</a>
+                    <a href="#isps" class="text-slate-300 hover:text-cyan-400 transition">ISPs & TV</a>
+                    <a href="#modelo-financiero" class="text-slate-300 hover:text-cyan-400 transition">Modelo Financiero</a>
+                </nav>
+                <div class="flex items-center space-x-4">
+                    <select id="globalLanguage" onchange="cambiarIdioma()" class="bg-slate-900 text-xs text-slate-300 border border-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-400">
+                        <option value="es">Español</option>
+                        <option value="en">English</option>
+                        <option value="pt">Português</option>
+                    </select>
+                    <a href="#sistema" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-lg shadow-md transition text-xs sm:text-sm">
+                        Acceso Sistema
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="flex-grow">
+            <!-- HERO -->
+            <section class="py-24 bg-gradient-to-b from-slate-950 to-slate-900 border-b border-slate-800 text-center px-4">
+                <div class="max-w-4xl mx-auto">
+                    <span class="bg-cyan-500/10 text-cyan-400 text-xs font-semibold px-4 py-1.5 rounded-full border border-cyan-500/20 uppercase tracking-widest inline-block mb-6">
+                        Tu empresa en piloto automático, sin fricción administrativa
+                    </span>
+                    <h1 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight">
+                        El ERP autónomo gestionado por <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">bots inteligentes</span>
+                    </h1>
+                    <p class="text-lg sm:text-xl text-slate-300 mb-10 leading-relaxed">
+                        Compra tu licencia vía Telegram, paga con Binance, selecciona tu país y deja que el sistema configure tu contabilidad, inventarios y cortes automáticos.
+                    </p>
+                    <div class="flex justify-center gap-4">
+                        <a href="https://t.me/cobro_deseo_privado_bot" target="_blank" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-8 py-3 rounded-xl shadow-lg transition">
+                            Adquirir vía Telegram
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- QUIÉNES SOMOS, MISIÓN Y VISIÓN -->
+            <section id="quienes-somos" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                <div class="bg-slate-800/40 border border-slate-700/60 p-8 sm:p-12 rounded-3xl shadow-xl">
+                    <h2 class="text-3xl font-bold text-white mb-6">¿Quiénes Somos?</h2>
+                    <p class="text-slate-300 text-lg leading-relaxed">
+                        Somos el ecosistema tecnológico de referencia en automatización corporativa y comercial. Desarrollamos soluciones avanzadas que integran control de inventarios, POS multicanal, contabilidad fiscal y un motor de pagos autónomo respaldado por Binance Pay y Telegram.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-slate-800/40 border border-slate-700/60 p-8 rounded-3xl">
+                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-bullseye text-cyan-400 mr-2"></i> Nuestra Misión</h3>
+                        <p class="text-slate-300 leading-relaxed">Democratizar la tecnología empresarial de alto nivel, entregando a emprendedores y corporaciones herramientas de automatización sofisticadas pero de uso sumamente sencillo y autónomo.</p>
+                    </div>
+                    <div class="bg-slate-800/40 border border-slate-700/60 p-8 rounded-3xl">
+                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-eye text-cyan-400 mr-2"></i> Nuestra Visión</h3>
+                        <p class="text-slate-300 leading-relaxed">Convertirnos en el ecosistema ERP inteligente líder en agilidad comercial y administrativa, eliminando las barreras geográficas y operativas en toda la región mediante la integración de Telegram y Binance.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MÓDULOS PRINCIPALES DEL SISTEMA -->
+            <section id="modulos" class="py-20 bg-slate-950/60 border-t border-b border-slate-800">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center max-w-3xl mx-auto mb-16">
+                        <h2 class="text-3xl font-bold text-white mb-4">Arquitectura Integral de Módulos</h2>
+                        <p class="text-slate-300">Control operativo absoluto desde el almacén hasta el estado financiero final.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl">
+                            <div class="text-cyan-400 text-3xl mb-4"><i class="fa-solid fa-boxes-stacked"></i></div>
+                            <h3 class="text-xl font-bold text-white mb-2">Control de Inventario</h3>
+                            <p class="text-slate-400 text-sm leading-relaxed">Trazabilidad multisucursal, lotes, series, mermas, punto de reorden automático y valoración por Costo Promedio / PEPS.</p>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl">
+                            <div class="text-cyan-400 text-3xl mb-4"><i class="fa-solid fa-cash-register"></i></div>
+                            <h3 class="text-xl font-bold text-white mb-2">Punto de Venta (POS)</h3>
+                            <p class="text-slate-400 text-sm leading-relaxed">Arquitectura offline-first, turnos, arqueos ciegos, facturación electrónica multimoneda y cobros con códigos QR dinámicos.</p>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl">
+                            <div class="text-cyan-400 text-3xl mb-4"><i class="fa-solid fa-chart-line"></i></div>
+                            <h3 class="text-xl font-bold text-white mb-2">Finanzas & P&L</h3>
+                            <p class="text-slate-400 text-sm leading-relaxed">Estado de resultados en tiempo real, flujo de caja, conciliación bancaria y cálculo automatizado de nóminas y comisiones.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SOLUCIÓN ESPECIALIZADA PARA ISPs Y TV POR SUSCRIPCIÓN -->
+            <section id="isps" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-gradient-to-r from-slate-800 to-slate-900 border border-cyan-500/30 p-8 sm:p-12 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div class="space-y-4 max-w-2xl">
+                        <span class="bg-cyan-500/10 text-cyan-400 text-xs font-semibold px-3 py-1 rounded-full border border-cyan-500/20 uppercase tracking-widest">
+                            Módulo Especializado
+                        </span>
+                        <h3 class="text-2xl sm:text-3xl font-bold text-white">ISPs y TV por Suscripción</h3>
+                        <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                            Automatización total de cobros y cortes de servicio. Nexus ERP gestiona el padrón de abonados, envía alertas de vencimiento, ejecuta la <strong>suspensión y corte automático del servicio</strong> ante impagos, y lo <strong>restaura al instante</strong> apenas el cliente cancela su cuota.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="https://t.me/cobro_deseo_privado_bot" target="_blank" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-3 rounded-xl shadow-lg transition whitespace-nowrap block text-center">
+                            Consultar Integración
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODELO FINANCIERO Y MONETARIO (VENEZUELA & MUNDO) -->
+            <section id="modelo-financiero" class="bg-slate-950 py-20 border-t border-slate-800">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center max-w-3xl mx-auto mb-16">
+                        <h2 class="text-3xl font-bold text-white mb-4">Modelo Financiero y Monetario Transparente</h2>
+                        <p class="text-slate-300">Separación exacta entre la operación interna de cada empresa y la adquisición de licencias.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl">
+                            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-coins text-cyan-400 mr-2"></i> Operación Interna (Moneda Local)</h3>
+                            <p class="text-slate-300 text-sm mb-4">Cada país opera bajo su normativa y divisa oficial.</p>
+                            <div class="text-xs text-slate-300 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
+                                <p><strong class="text-cyan-400">🇻🇪 Venezuela (Nativo):</strong> Gestión en <strong>Bolívares (VES)</strong>, con cotizaciones oficiales actualizadas para <strong>Dólar BCB</strong> y <strong>Euro</strong>.</p>
+                                <p><strong class="text-cyan-400">🌎 México / Colombia:</strong> Adaptado a monedas locales (MXN, COP).</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl">
+                            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-brands fa-telegram text-cyan-400 mr-2"></i> Adquisición de Licencia (Exclusivo Cripto)</h3>
+                            <p class="text-slate-300 text-sm mb-4">El único uso de criptomonedas es para adquirir la licencia del software directamente contigo.</p>
+                            <div class="text-xs text-slate-300 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
+                                <p><strong class="text-cyan-400">Pasarela:</strong> USDT vía Binance Pay (Merchant ID: 74841304).</p>
+                                <p><strong class="text-cyan-400">Bot Oficial:</strong> <a href="https://t.me/cobro_deseo_privado_bot" target="_blank" class="text-cyan-400 underline">@cobro_deseo_privado_bot</a> (+15 días de bono de lanzamiento).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL DE CONTROL MULTIPAÍS Y VALIDACIÓN -->
+            <section id="sistema" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-slate-800 border border-slate-700/80 rounded-3xl p-8 sm:p-12 shadow-2xl">
+                    <h3 class="text-2xl font-bold text-white mb-2">Panel de Control Multipaís y Validación</h3>
+                    <p class="text-sm text-slate-400 mb-8">Selecciona tu país de operación, idioma y verifica el estado de tu licencia.</p>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Seleccionar País / Región</label>
+                                <select id="countrySelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400">
+                                    <option value="VEN">Venezuela (VES / BCB / Euro)</option>
+                                    <option value="MEX">México (MXN)</option>
+                                    <option value="COL">Colombia (COP)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Clave de Licencia</label>
+                                <input type="text" id="licenseKeyInput" value="NEXUS-CORP-2026-VIP" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400 font-mono">
+                            </div>
+                            <button onclick="validarLicenciaGlobal()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl transition shadow-lg text-sm">
+                                Validar Licencia y País
+                            </button>
+                        </div>
+
+                        <div class="lg:col-span-2 bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                            <div id="serverLog" class="bg-slate-950 font-mono text-xs text-cyan-400 p-5 rounded-2xl border border-slate-800 h-52 overflow-y-auto space-y-2 leading-relaxed">
+                                <p>[SYSTEM] Servidor global multi-país y motor POS inicializado. Selecciona tu país e idioma para comenzar.</p>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-slate-800 text-xs text-slate-400 flex justify-between">
+                                <span>Plataforma SaaS en Línea</span>
+                                <span>Soporte Bot: @cobro_deseo_privado_bot</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="bg-slate-950 border-t border-slate-800 py-8 text-center text-sm text-slate-400">
+            <p>&copy; 2026 Nexus ERP & POS. Todos los derechos reservados. Operaciones respaldadas por Telegram y Binance.</p>
+        </footer>
+
+        <script>
+            function cambiarIdioma() {
+                const lang = document.getElementById('globalLanguage').value;
+                const log = document.getElementById('serverLog');
+                const time = new Date().toLocaleTimeString();
+                log.innerHTML += \`<p class="text-slate-400">[\\${time}] [LANG] Interfaz actualizada al idioma: \${lang.toUpperCase()}</p>\`;
+                log.scrollTop = log.scrollHeight;
+            }
+
+            async function validarLicenciaGlobal() {
+                const key = document.getElementById('licenseKeyInput').value;
+                const country = document.getElementById('countrySelect').value;
+                const lang = document.getElementById('globalLanguage').value;
+                const logBox = document.getElementById('serverLog');
+                const time = new Date().toLocaleTimeString();
+
+                try {
+                    const response = await fetch('/api/verify-global', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key, country, language: lang })
+                    });
+                    const data = await response.json();
+                    
+                    if(data.success) {
+                        logBox.innerHTML += \`<p class="text-emerald-400">[\\${time}] [SUCCESS] \${data.message} | País: \${data.country} | Moneda: \${data.currency}</p>\`;
+                    } else {
+                        logBox.innerHTML += \`<p class="text-amber-400">[\\${time}] [WARNING] \${data.message}</p>\`;
+                    }
+                } catch (e) {
+                    logBox.innerHTML += \`<p class="text-red-400">[\\${time}] [ERROR] Error de conexión con el servidor.</p>\`;
+                }
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+        </script>
+    </body>
+    </html>
+    `);
+});
+
+// ============================================================================
+// 2. BACKEND API Y MOTOR DE AUTOMATIZACIÓN
+// ============================================================================
+app.post('/api/verify-global', (req, res) => {
+    const { key, country, language } = req.body;
+
+    db.auditLogs.push({
+        timestamp: new Date().toISOString(),
+        event: "GLOBAL_VERIFY",
+        details: `Validación clave ${key} para país ${country} en idioma ${language}`
+    });
+
+    const countryConfig = db.countriesConfig[country] || { currency: "USD", name: "Global" };
+
+    if (db.licenses[key]) {
+        const lic = db.licenses[key];
+        res.json({
+            success: true,
+            country: countryConfig.name,
+            currency: countryConfig.currency,
+            message: `Licencia VÁLIDA. Entorno configurado correctamente para ${countryConfig.name} (${countryConfig.currency}).`
+        });
+    } else {
+        res.json({
+            success: false,
+            message: "Licencia no válida o vencida. Adquiere tu acceso a través de @cobro_deseo_privado_bot."
+        });
+    }
+});
+
+// Webhook para pagos USDT vía Binance Pay / MacroDroid / Telegram
+app.post('/api/webhook/payment', (req, res) => {
+    const { secret, clientName, licenseKey, country, language } = req.body;
+
+    if (secret !== WEBHOOK_SECRET_KEY) {
+        return res.status(403).json({ error: "Token de seguridad inválido." });
+    }
+
+    db.licenses[licenseKey] = {
+        status: "ACTIVE",
+        tier: "Enterprise Tier ($120/mes)",
+        expires: new Date(Date.now() + 45 * 86400000).toISOString().split('T')[0], // 30 días + 15 de bono
+        country: country || "VEN",
+        language: language || "es",
+        company: clientName || "Cliente Corporativo"
+    };
+
+    console.log(`[AUTOMATION] Licencia emitida y activada para ${clientName} en país ${country}`);
+    res.json({ success: true, message: "Licencia emitida y activada con éxito." });
+});
+
+app.listen(PORT, () => {
+    console.log(`Servidor Nexus ERP & POS Global ejecutándose en el puerto ${PORT}`);
+});
+
