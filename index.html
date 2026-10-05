@@ -1,362 +1,941 @@
-/**
- * ============================================================================
- * NEXUS ERP & POS - ECOSISTEMA TECNOLÓGICO AUTÓNOMO Y GLOBAL
- * ============================================================================
- * Versión Completa e Integral (Backend Node.js + Frontend Institucional)
- * 
- * Arquitectura:
- * 1. Identidad Corporativa: Quiénes Somos, Misión, Visión y Valores.
- * 2. Módulos Operativos: Inventario multisucursal, POS con arqueos y turnos, P&L, Nómina.
- * 3. Automatización de ISPs / TV por Cable: Cortes y reconexiones automáticas de servicio.
- * 4. Modelo Multipaís y Multi-idioma: Soporte dinámico para Español, Inglés, Portugués,
- *    con parametrización monetaria local (Venezuela: Bolívares, Dólar BCB, Euro).
- * 5. Licenciamiento SaaS Exclusivo Cripto: USDT vía Binance Pay / MacroDroid / @cobro_deseo_privado_bot.
- * ============================================================================
- */
-
-const express = require('express');
-const bodyParser = require('body-parser');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middlewares corporativos
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// Base de datos lógica robusta del sistema
-const db = {
-    licenses: {
-        "NEXUS-CORP-2026-VIP": { 
-            status: "ACTIVE", 
-            tier: "Enterprise Tier ($120/mes)", 
-            expires: "2027-03-30", 
-            country: "VEN",
-            currency: "VES",
-            language: "es",
-            company: "Comercial Larry C.A."
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="page_title">Nexus ERP - El ERP Autónomo impulsado por Bots</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #131c2e;
+            --accent-green: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.4);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #1f293d;
         }
-    },
-    countriesConfig: {
-        "VEN": { name: "Venezuela", currency: "VES", exchangeRates: ["Bolívares (VES)", "Dólar BCB", "Euro"] },
-        "MEX": { name: "México", currency: "MXN", exchangeRates: ["Peso Mexicano (MXN)"] },
-        "COL": { name: "Colombia", currency: "COP", exchangeRates: ["Peso Colombiano (COP)"] }
-    },
-    plans: [
-        { name: "Negocio Pequeño", price: "$15 / mes", target: "Emprendimientos y comercios locales" },
-        { name: "Negocio Mediano", price: "$45 / mes", target: "Comercios en expansión y mayor volumen" },
-        { name: "Empresa Grande", price: "$120 / mes", target: "Macro-operación, corporaciones e industria" }
-    ],
-    auditLogs: [
-        { timestamp: new Date().toISOString(), event: "SYSTEM_BOOT", details: "Nexus ERP Core inicializado con módulos POS, inventario, P&L, ISPs y pasarela Telegram/Binance." }
-    ]
-};
 
-// Clave secreta para webhooks de MacroDroid / Telegram (@cobro_deseo_privado_bot)
-const WEBHOOK_SECRET_KEY = "nexus_secure_secret_enterprise_2026";
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-// ============================================================================
-// 1. INTERFAZ WEB INSTITUCIONAL Y PORTAL ERP (COMPLETO)
-// ============================================================================
-app.get('/', (req, res) => {
-    res.send(`
-    <!DOCTYPE html>
-    <html lang="es" class="scroll-smooth">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Nexus ERP & POS | Ecosistema Autónomo Global</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    </head>
-    <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950">
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
 
-        <!-- HEADER INSTITUCIONAL -->
-        <header class="bg-slate-950/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-cyan-500 text-slate-950 p-2.5 rounded-xl font-black text-xl shadow-lg shadow-cyan-500/20">
-                        <i class="fa-solid fa-cube"></i>
-                    </div>
-                    <div>
-                        <span class="text-2xl font-bold tracking-tight text-white">Nexus <span class="text-cyan-400">ERP</span></span>
-                        <span class="block text-xs text-slate-400 tracking-wider">AUTONOMOUS ERP & POS SYSTEM</span>
-                    </div>
-                </div>
-                <nav class="hidden md:flex space-x-8 text-sm font-medium">
-                    <a href="#quienes-somos" class="text-slate-300 hover:text-cyan-400 transition">Quiénes Somos</a>
-                    <a href="#modulos" class="text-slate-300 hover:text-cyan-400 transition">Módulos</a>
-                    <a href="#isps" class="text-slate-300 hover:text-cyan-400 transition">ISPs & TV</a>
-                    <a href="#modelo-financiero" class="text-slate-300 hover:text-cyan-400 transition">Modelo Financiero</a>
-                </nav>
-                <div class="flex items-center space-x-4">
-                    <select id="globalLanguage" onchange="cambiarIdioma()" class="bg-slate-900 text-xs text-slate-300 border border-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-400">
-                        <option value="es">Español</option>
-                        <option value="en">English</option>
-                        <option value="pt">Português</option>
-                    </select>
-                    <a href="#sistema" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-lg shadow-md transition text-xs sm:text-sm">
-                        Acceso Sistema
-                    </a>
-                </div>
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 8%;
+            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(11, 15, 25, 0.98);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nexus-logo {
+            width: 34px;
+            height: 34px;
+            background: var(--bg-color);
+            border: 2px solid var(--accent-green);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: var(--accent-green);
+            font-size: 20px;
+            box-shadow: 0 0 10px var(--accent-glow);
+            position: relative;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        
+        .nexus-logo::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            box-shadow: 0 0 15px var(--accent-green);
+            animation: pulse 2s infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.05); opacity: 0.2; }
+            100% { transform: scale(1); opacity: 0.5; }
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: 1px;
+        }
+        
+        .logo-text span {
+            color: var(--accent-green);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .selector-box {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+            max-width: 240px;
+        }
+
+        .selector-box:hover, .selector-box:focus {
+            border-color: var(--accent-green);
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--accent-green);
+        }
+
+        /* --- BARRA DE MOVIMIENTO (MARQUEE) --- */
+        .marquee-container {
+            width: 100%;
+            background-color: #080a10;
+            padding: 15px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 35s linear infinite;
+        }
+
+        .marquee-item {
+            display: inline-block;
+            color: var(--text-muted);
+            font-size: 16px; 
+            margin: 0 30px;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+        
+        .marquee-item:hover {
+            color: var(--accent-green);
+            opacity: 1;
+        }
+
+        @keyframes marquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-50%, 0); }
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            text-align: center;
+            padding: 60px 20px 50px 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        .hero h1 span {
+            color: var(--accent-green);
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-green);
+            color: #000;
+            box-shadow: 0 4px 14px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            background-color: #059669;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-green);
+        }
+
+        .hero-mockup {
+            max-width: 900px;
+            margin: 0 auto 60px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .hero-mockup img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* --- SECCIONES ESTÁNDAR --- */
+        section {
+            padding: 80px 8%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 50px;
+            font-weight: 700;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border-color: var(--accent-green);
+        }
+
+        .card-icon {
+            font-size: 36px;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .card h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: var(--accent-green);
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* --- PRICING --- */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        .price-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .price-card.featured {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+        }
+
+        .price-card h3 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .price {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--accent-green);
+            margin: 20px 0;
+        }
+
+        .price span {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: normal;
+        }
+
+        .price-features {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .price-features li {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .price-features li::before {
+            content: "✓";
+            color: var(--accent-green);
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* --- MISIÓN/VISIÓN --- */
+        .mission-vision {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        /* --- SECCIÓN DE CONTACTO --- */
+        .contact-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 50px;
+            max-width: 800px;
+            margin: 40px auto;
+            text-align: center;
+        }
+
+        .contact-section h3 {
+            font-size: 24px;
+            color: var(--accent-green);
+            margin-bottom: 15px;
+        }
+
+        .contact-email {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 20px 0;
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.1);
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 1px dashed var(--accent-green);
+            text-decoration: none;
+        }
+
+        .contact-email:hover {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        /* --- REDES SOCIALES --- */
+        .social-section {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid var(--border-color);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .social-section h3 {
+            font-size: 20px;
+            margin-bottom: 25px;
+            color: var(--text-main);
+        }
+
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .social-btn {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .social-btn:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            transform: translateY(-2px);
+        }
+
+        /* --- BOTÓN FLOTANTE DE SOPORTE --- */
+        .floating-support {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--accent-green);
+            color: #000;
+            padding: 14px 22px;
+            border-radius: 30px;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .floating-support:hover {
+            transform: scale(1.05);
+            background-color: #059669;
+            color: #fff;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            text-align: center;
+            padding: 40px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .mission-vision {
+                grid-template-columns: 1fr;
+            }
+            .hero h1 {
+                font-size: 36px;
+            }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px 5%;
+            }
+            .logo-container {
+                margin-bottom: 10px;
+            }
+            .header-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            nav {
+                margin-top: 15px;
+                width: 100%;
+                display: flex;
+                justify-content: space-around;
+                margin-left: 0 !important;
+            }
+            nav a {
+                margin-left: 0 !important;
+            }
+            .marquee-item {
+                font-size: 14px;
+                margin: 0 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header / Barra de Navegación -->
+    <header>
+        <div class="logo-container">
+            <div class="nexus-logo">N</div>
+            <div class="logo-text">Nexus<span>ERP</span></div>
+        </div>
+        
+        <div class="header-controls">
+            <!-- Selector 1: País de Ubicación Fiscal y Licencia -->
+            <select class="selector-box" id="countrySelector" onchange="cambiarPais()" title="País de ubicación fiscal">
+                <optgroup label="🌐 Global / Internacional">
+                    <option value="global_usd" selected>🌐 Global (USD / Standard)</option>
+                </optgroup>
+                <optgroup label="🌎 Norteamérica">
+                    <option value="us">🇺🇸 Estados Unidos (USD)</option>
+                    <option value="ca">🇨🇦 Canadá (USD / CAD)</option>
+                    <option value="mx">🇲🇽 México (MXN / SAT)</option>
+                </optgroup>
+                <optgroup label="🌎 América Central y Caribe">
+                    <option value="cr">🇨🇷 Costa Rica (CRC / DGT)</option>
+                    <option value="sv">🇸🇻 El Salvador (USD / MH)</option>
+                    <option value="gt">🇬🇹 Guatemala (GTQ / SAT)</option>
+                    <option value="hn">🇭🇳 Honduras (HNL / SAR)</option>
+                    <option value="ni">🇳🇮 Nicaragua (NIO / DGI)</option>
+                    <option value="pa">🇵🇦 Panamá (PAB / DGI)</option>
+                    <option value="do">🇩🇴 República Dominicana (DOP / DGII)</option>
+                </optgroup>
+                <optgroup label="🌎 América del Sur">
+                    <option value="ar">🇦🇷 Argentina (ARS / AFIP)</option>
+                    <option value="bo">🇧🇴 Bolivia (BOB / SIN)</option>
+                    <option value="br">🇧🇷 Brasil (BRL / Receita Federal)</option>
+                    <option value="cl">🇨🇱 Chile (CLP / SII)</option>
+                    <option value="co">🇨🇱 Colombia (COP / DIAN)</option>
+                    <option value="ec">🇪🇨 Ecuador (USD / SRI)</option>
+                    <option value="py">🇵🇾 Paraguay (PYG / SET)</option>
+                    <option value="pe">🇵🇪 Perú (PEN / SUNAT)</option>
+                    <option value="uy">🇺🇾 Uruguay (UYU / DGI)</option>
+                    <option value="ve">🇻🇪 Venezuela (VES / SENIAT)</option>
+                </optgroup>
+                <optgroup label="🇪🇺 Europa">
+                    <option value="es">🇪🇸 España (EUR / AEAT)</option>
+                    <option value="eu_other">🇪🇺 Resto de Europa (EUR / USD)</option>
+                </optgroup>
+                <optgroup label="🌏 Asia">
+                    <option value="cn">🇨🇳 China (USD / CNH)</option>
+                    <option value="jp">🇯🇵 Japón (USD / JPY)</option>
+                    <option value="asia_other">🌏 Resto de Asia (USD / Standard)</option>
+                </optgroup>
+                <optgroup label="🌊 Oceanía">
+                    <option value="oceania">🇦🇺 Australia / Oceanía (USD / AUD)</option>
+                </optgroup>
+                <optgroup label="🌍 África">
+                    <option value="africa">🌍 África / Regional (USD / Standard)</option>
+                </optgroup>
+            </select>
+
+            <!-- Selector 2: Idioma de la Interfaz -->
+            <select class="selector-box" id="langSelector" onchange="cambiarIdioma()">
+                <option value="es" selected>🇪🇸 Español</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="pt">🇧🇷 Português</option>
+                <option value="fr">🇫🇷 Français</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="ru">🇷🇺 Русский</option>
+            </select>
+        </div>
+
+        <nav>
+            <a href="#caracteristicas" data-i18n="nav_features">Características</a>
+            <a href="#mision-vision" data-i18n="nav_about">Nosotros</a>
+            <a href="#precios" data-i18n="nav_pricing">Licencias</a>
+            <a href="#isps" data-i18n="nav_isps">ISPs y TV</a>
+            <a href="#contacto" data-i18n="nav_contact">Contacto</a>
+        </nav>
+    </header>
+
+    <!-- Barra de Movimiento (Marquee) -->
+    <div class="marquee-container">
+        <div class="marquee-content">
+            <span class="marquee-item" data-i18n="m1">🚀 Automatización Total</span>
+            <span class="marquee-item" data-i18n="m2">🤖 Ecosistema de Bots 24/7</span>
+            <span class="marquee-item" data-i18n="m3">💬 Integración con Telegram</span>
+            <span class="marquee-item" data-i18n="m4">💰 Pagos con Binance Pay</span>
+            <span class="marquee-item" data-i18n="m5">📊 Control Financiero y Fiscal</span>
+            <span class="marquee-item" data-i18n="m6">☁️ Nube Segura</span>
+            <span class="marquee-item" data-i18n="m7">📡 Módulo Especializado ISPs</span>
+            <!-- Duplicado para efecto loop infinito -->
+            <span class="marquee-item" data-i18n="m1">🚀 Automatización Total</span>
+            <span class="marquee-item" data-i18n="m2">🤖 Ecosistema de Bots 24/7</span>
+            <span class="marquee-item" data-i18n="m3">💬 Integración con Telegram</span>
+            <span class="marquee-item" data-i18n="m4">💰 Pagos con Binance Pay</span>
+            <span class="marquee-item" data-i18n="m5">📊 Control Financiero y Fiscal</span>
+            <span class="marquee-item" data-i18n="m6">☁️ Nube Segura</span>
+            <span class="marquee-item" data-i18n="m7">📡 Módulo Especializado ISPs</span>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1 data-i18n="hero_title">Tu empresa en <span>piloto automático</span>, sin fricción administrativa.</h1>
+        <p data-i18n="hero_desc">El ERP autónomo gestionado por bots inteligentes. Compra tu licencia vía Telegram, paga con Binance, selecciona tu país y deja que el sistema configure tu contabilidad, inventarios y cortes automáticos.</p>
+        <div class="cta-buttons">
+            <a href="#precios" class="btn btn-primary" data-i18n="btn_buy">Comprar Licencia</a>
+            <a href="#caracteristicas" class="btn btn-secondary" data-i18n="btn_more">Conocer Más</a>
+        </div>
+    </section>
+
+    <!-- Mockup Visual -->
+    <div class="hero-mockup">
+        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80" alt="Nexus ERP Dashboard Mockup">
+    </div>
+
+    <!-- Características Principales -->
+    <section id="caracteristicas">
+        <h2 class="section-title" data-i18n="feat_title">Ecosistema Autónomo Integrado</h2>
+        <div class="grid-3">
+            <div class="card">
+                <div class="card-icon">🤖</div>
+                <h3 data-i18n="f1_title">Bots de Operación 24/7</h3>
+                <p data-i18n="f1_desc">Gestión automatizada de contabilidad fiscal adaptada a las leyes de tu país, control de almacén y reposición de inventario en tiempo real.</p>
             </div>
-        </header>
+            <div class="card">
+                <div class="card-icon">🛡️</div>
+                <h3 data-i18n="f2_title">Control Universal de Pérdidas</h3>
+                <p data-i18n="f2_desc">Rastreo transversal de mermas, diferencias en caja, desperdicios y costos ocultos para blindar la rentabilidad de tu negocio desde el día uno.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🍽️</div>
+                <h3 data-i18n="f3_title">Comanda Digital Integrada</h3>
+                <p data-i18n="f3_desc">Opción flexible ideal para locales de comida rápida, conectando al instante la toma de pedidos con la cocina y descargando insumos automáticamente.</p>
+            </div>
+        </div>
+    </section>
 
-        <!-- CONTENIDO PRINCIPAL -->
-        <main class="flex-grow">
-            <!-- HERO -->
-            <section class="py-24 bg-gradient-to-b from-slate-950 to-slate-900 border-b border-slate-800 text-center px-4">
-                <div class="max-w-4xl mx-auto">
-                    <span class="bg-cyan-500/10 text-cyan-400 text-xs font-semibold px-4 py-1.5 rounded-full border border-cyan-500/20 uppercase tracking-widest inline-block mb-6">
-                        Tu empresa en piloto automático, sin fricción administrativa
-                    </span>
-                    <h1 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight">
-                        El ERP autónomo gestionado por <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">bots inteligentes</span>
-                    </h1>
-                    <p class="text-lg sm:text-xl text-slate-300 mb-10 leading-relaxed">
-                        Compra tu licencia vía Telegram, paga con Binance, selecciona tu país y deja que el sistema configure tu contabilidad, inventarios y cortes automáticos.
-                    </p>
-                    <div class="flex justify-center gap-4">
-                        <a href="https://t.me/cobro_deseo_privado_bot" target="_blank" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-8 py-3 rounded-xl shadow-lg transition">
-                            Adquirir vía Telegram
-                        </a>
-                    </div>
+    <!-- Misión y Visión -->
+    <section id="mision-vision">
+        <h2 class="section-title" data-i18n="about_title">Quiénes Somos</h2>
+        <div class="mission-vision">
+            <div class="card">
+                <div class="card-icon">🎯</div>
+                <h3 data-i18n="mission_title">Nuestra Misión</h3>
+                <p data-i18n="mission_desc">Democratizar la tecnología empresarial de alto nivel, entregando a emprendedores y corporaciones herramientas de automatización sofisticadas pero de uso sumamente sencillo y autónomo.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">👁️‍🗨️️</div>
+                <h3 data-i18n="vision_title">Nuestra Visión</h3>
+                <p data-i18n="vision_desc">Convertirnos en el ecosistema ERP inteligente líder en agilidad comercial y administrativa, eliminando las barreras geográficas y operativas en toda la región mediante la integración de Telegram y Binance.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tipos de Licencias y Precios -->
+    <section id="precios">
+        <h2 class="section-title" data-i18n="pricing_title">Planes y Licencias</h2>
+        <div class="pricing-grid">
+            <!-- Plan Pequeño -->
+            <div class="price-card">
+                <div>
+                    <h3 data-i18n="p1_name">Negocio Pequeño</h3>
+                    <p data-i18n="p1_desc">Ideal para emprendimientos y comercios locales.</p>
+                    <div class="price" id="price1">$15 <span data-i18n="per_month">/ mes</span></div>
+                    <ul class="price-features">
+                        <li data-i18n="p1_f1">Contabilidad básica</li>
+                        <li data-i18n="p1_f2">Control de inventario sencillo</li>
+                        <li data-i18n="p1_f3">Control básico de pérdidas</li>
+                        <li data-i18n="p1_f4">Opción de módulo de comanda (Comida Rápida)</li>
+                        <li data-i18n="p1_f5">Suspensión automática por impago</li>
+                    </ul>
                 </div>
-            </section>
+                <a href="https://t.me/TuBotDeTelegram" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_telegram">Adquirir vía Telegram</a>
+            </div>
 
-            <!-- QUIÉNES SOMOS, MISIÓN Y VISIÓN -->
-            <section id="quienes-somos" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-                <div class="bg-slate-800/40 border border-slate-700/60 p-8 sm:p-12 rounded-3xl shadow-xl">
-                    <h2 class="text-3xl font-bold text-white mb-6">¿Quiénes Somos?</h2>
-                    <p class="text-slate-300 text-lg leading-relaxed">
-                        Somos el ecosistema tecnológico de referencia en automatización corporativa y comercial. Desarrollamos soluciones avanzadas que integran control de inventarios, POS multicanal, contabilidad fiscal y un motor de pagos autónomo respaldado por Binance Pay y Telegram.
-                    </p>
+            <!-- Plan Mediano -->
+            <div class="price-card featured">
+                <div>
+                    <h3 data-i18n="p2_name">Negocio Mediano</h3>
+                    <p data-i18n="p2_desc">Para comercios en expansión y mayor volumen.</p>
+                    <div class="price" id="price2">$45 <span data-i18n="per_month">/ mes</span></div>
+                    <ul class="price-features">
+                        <li data-i18n="p2_f1">Contabilidad avanzada con cumplimiento fiscal</li>
+                        <li data-i18n="p2_f2">Almacén con reposición automática</li>
+                        <li data-i18n="p2_f3">Control analítico de pérdidas y auditoría</li>
+                        <li data-i18n="p2_f4">Múltiples usuarios con permisos</li>
+                        <li data-i18n="p2_f5">Suspensión automática por impago</li>
+                    </ul>
                 </div>
+                <a href="https://t.me/TuBotDeTelegram" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_telegram">Adquirir vía Telegram</a>
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="bg-slate-800/40 border border-slate-700/60 p-8 rounded-3xl">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-bullseye text-cyan-400 mr-2"></i> Nuestra Misión</h3>
-                        <p class="text-slate-300 leading-relaxed">Democratizar la tecnología empresarial de alto nivel, entregando a emprendedores y corporaciones herramientas de automatización sofisticadas pero de uso sumamente sencillo y autónomo.</p>
-                    </div>
-                    <div class="bg-slate-800/40 border border-slate-700/60 p-8 rounded-3xl">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-eye text-cyan-400 mr-2"></i> Nuestra Visión</h3>
-                        <p class="text-slate-300 leading-relaxed">Convertirnos en el ecosistema ERP inteligente líder en agilidad comercial y administrativa, eliminando las barreras geográficas y operativas en toda la región mediante la integración de Telegram y Binance.</p>
-                    </div>
+            <!-- Plan Grande -->
+            <div class="price-card">
+                <div>
+                    <h3 data-i18n="p3_name">Empresa Grande</h3>
+                    <p data-i18n="p3_desc">Macro-operación, corporaciones e industria.</p>
+                    <div class="price" id="price3">$120 <span data-i18n="per_month">/ mes</span></div>
+                    <ul class="price-features">
+                        <li data-i18n="p3_f1">Ecosistema completo de bots autónomos</li>
+                        <li data-i18n="p3_f2">Control de producción macro</li>
+                        <li data-i18n="p3_f3">Logística avanzada y rutas de despacho</li>
+                        <li data-i18n="p3_f4">Control macro de pérdidas en cadena</li>
+                        <li data-i18n="p3_f5">Suspensión automática por impago</li>
+                    </ul>
                 </div>
-            </section>
+                <a href="https://t.me/TuBotDeTelegram" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_telegram">Adquirir vía Telegram</a>
+            </div>
+        </div>
+    </section>
 
-            <!-- MÓDULOS PRINCIPALES DEL SISTEMA -->
-            <section id="modulos" class="py-20 bg-slate-950/60 border-t border-b border-slate-800">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center max-w-3xl mx-auto mb-16">
-                        <h2 class="text-3xl font-bold text-white mb-4">Arquitectura Integral de Módulos</h2>
-                        <p class="text-slate-300">Control operativo absoluto desde el almacén hasta el estado financiero final.</p>
-                    </div>
+    <!-- Módulo Especializado ISPs y TV -->
+    <section id="isps">
+        <h2 class="section-title" data-i18n="isp_title">Solución Avanzada para ISPs y TV por Suscripción</h2>
+        <div class="card" style="max-width: 800px; margin: 0 auto; text-align: center;">
+            <div class="card-icon">📡</div>
+            <h3 data-i18n="isp_subtitle">Automatización de Cobros y Cortes de Servicio</h3>
+            <p style="margin-top: 15px; margin-bottom: 20px;" data-i18n="isp_desc">Si tu empresa provee internet o televisión por suscripción, Nexus ERP gestiona el padrón de abonados, envía alertas de vencimiento, ejecuta la suspensión y corte automático del servicio ante impagos, y lo restaura al instante apenas el cliente cancela su cuota.</p>
+            <a href="https://t.me/TuBotDeTelegram" target="_blank" class="btn btn-secondary" data-i18n="isp_btn">Consultar Integración</a>
+        </div>
+    </section>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl">
-                            <div class="text-cyan-400 text-3xl mb-4"><i class="fa-solid fa-boxes-stacked"></i></div>
-                            <h3 class="text-xl font-bold text-white mb-2">Control de Inventario</h3>
-                            <p class="text-slate-400 text-sm leading-relaxed">Trazabilidad multisucursal, lotes, series, mermas, punto de reorden automático y valoración por Costo Promedio / PEPS.</p>
-                        </div>
-                        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl">
-                            <div class="text-cyan-400 text-3xl mb-4"><i class="fa-solid fa-cash-register"></i></div>
-                            <h3 class="text-xl font-bold text-white mb-2">Punto de Venta (POS)</h3>
-                            <p class="text-slate-400 text-sm leading-relaxed">Arquitectura offline-first, turnos, arqueos ciegos, facturación electrónica multimoneda y cobros con códigos QR dinámicos.</p>
-                        </div>
-                        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl">
-                            <div class="text-cyan-400 text-3xl mb-4"><i class="fa-solid fa-chart-line"></i></div>
-                            <h3 class="text-xl font-bold text-white mb-2">Finanzas & P&L</h3>
-                            <p class="text-slate-400 text-sm leading-relaxed">Estado de resultados en tiempo real, flujo de caja, conciliación bancaria y cálculo automatizado de nóminas y comisiones.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+    <!-- Sección de Contacto con Correo Electrónico -->
+    <section id="contacto">
+        <div class="contact-section">
+            <h3 data-i18n="contact_title">Contacto Oficial</h3>
+            <p data-i18n="contact_desc">¿Tienes dudas, requieres soporte técnico avanzado o necesitas una cotización corporativa a la medida? Escríbenos directamente:</p>
+            <a href="mailto:deseoprivado@gmail.com" class="contact-email">deseoprivado@gmail.com</a>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 10px;" data-i18n="contact_sub">Atención rápida a través de nuestro equipo de soporte corporativo.</p>
+        </div>
+    </section>
 
-            <!-- SOLUCIÓN ESPECIALIZADA PARA ISPs Y TV POR SUSCRIPCIÓN -->
-            <section id="isps" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="bg-gradient-to-r from-slate-800 to-slate-900 border border-cyan-500/30 p-8 sm:p-12 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div class="space-y-4 max-w-2xl">
-                        <span class="bg-cyan-500/10 text-cyan-400 text-xs font-semibold px-3 py-1 rounded-full border border-cyan-500/20 uppercase tracking-widest">
-                            Módulo Especializado
-                        </span>
-                        <h3 class="text-2xl sm:text-3xl font-bold text-white">ISPs y TV por Suscripción</h3>
-                        <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
-                            Automatización total de cobros y cortes de servicio. Nexus ERP gestiona el padrón de abonados, envía alertas de vencimiento, ejecuta la <strong>suspensión y corte automático del servicio</strong> ante impagos, y lo <strong>restaura al instante</strong> apenas el cliente cancela su cuota.
-                        </p>
-                    </div>
-                    <div>
-                        <a href="https://t.me/cobro_deseo_privado_bot" target="_blank" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-3 rounded-xl shadow-lg transition whitespace-nowrap block text-center">
-                            Consultar Integración
-                        </a>
-                    </div>
-                </div>
-            </section>
+    <!-- Redes Sociales -->
+    <section class="social-section">
+        <h3 data-i18n="social_title">Síguenos en nuestras comunidades y redes</h3>
+        <div class="social-icons">
+            <a href="https://facebook.com/deseoprivado" target="_blank" class="social-btn">📘 Facebook (Deseo Privado)</a>
+            <a href="https://instagram.com/deseoprivado24" target="_blank" class="social-btn">📷 Instagram (@deseoprivado24)</a>
+            <a href="https://twitter.com/deseoprivado24" target="_blank" class="social-btn">🐦 X / Twitter (@deseoprivado24)</a>
+            <a href="https://youtube.com/@deseoprivado24" target="_blank" class="social-btn">📺 YouTube (Deseo Privado 24)</a>
+            <a href="https://tiktok.com/@usuario7414934538248" target="_blank" class="social-btn">🎵 TikTok (@usuario7414934538248)</a>
+        </div>
+    </section>
 
-            <!-- MODELO FINANCIERO Y MONETARIO (VENEZUELA & MUNDO) -->
-            <section id="modelo-financiero" class="bg-slate-950 py-20 border-t border-slate-800">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center max-w-3xl mx-auto mb-16">
-                        <h2 class="text-3xl font-bold text-white mb-4">Modelo Financiero y Monetario Transparente</h2>
-                        <p class="text-slate-300">Separación exacta entre la operación interna de cada empresa y la adquisición de licencias.</p>
-                    </div>
+    <!-- Botón Flotante de Atención al Cliente / Soporte -->
+    <a href="https://t.me/TuBotDeTelegram" target="_blank" class="floating-support" title="Soporte y Atención al Cliente" data-i18n="float_support">
+        💬 Soporte 24/7
+    </a>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl">
-                            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-coins text-cyan-400 mr-2"></i> Operación Interna (Moneda Local)</h3>
-                            <p class="text-slate-300 text-sm mb-4">Cada país opera bajo su normativa y divisa oficial.</p>
-                            <div class="text-xs text-slate-300 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
-                                <p><strong class="text-cyan-400">🇻🇪 Venezuela (Nativo):</strong> Gestión en <strong>Bolívares (VES)</strong>, con cotizaciones oficiales actualizadas para <strong>Dólar BCB</strong> y <strong>Euro</strong>.</p>
-                                <p><strong class="text-cyan-400">🌎 México / Colombia:</strong> Adaptado a monedas locales (MXN, COP).</p>
-                            </div>
-                        </div>
-                        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl">
-                            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-brands fa-telegram text-cyan-400 mr-2"></i> Adquisición de Licencia (Exclusivo Cripto)</h3>
-                            <p class="text-slate-300 text-sm mb-4">El único uso de criptomonedas es para adquirir la licencia del software directamente contigo.</p>
-                            <div class="text-xs text-slate-300 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
-                                <p><strong class="text-cyan-400">Pasarela:</strong> USDT vía Binance Pay (Merchant ID: 74841304).</p>
-                                <p><strong class="text-cyan-400">Bot Oficial:</strong> <a href="https://t.me/cobro_deseo_privado_bot" target="_blank" class="text-cyan-400 underline">@cobro_deseo_privado_bot</a> (+15 días de bono de lanzamiento).</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+    <!-- Footer -->
+    <footer>
+        <p data-i18n="footer_text">&copy; 2026 Nexus ERP &bull; Deseo Privado. Todos los derechos reservados. Operaciones respaldadas por Telegram y Binance.</p>
+    </footer>
 
-            <!-- PANEL DE CONTROL MULTIPAÍS Y VALIDACIÓN -->
-            <section id="sistema" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="bg-slate-800 border border-slate-700/80 rounded-3xl p-8 sm:p-12 shadow-2xl">
-                    <h3 class="text-2xl font-bold text-white mb-2">Panel de Control Multipaís y Validación</h3>
-                    <p class="text-sm text-slate-400 mb-8">Selecciona tu país de operación, idioma y verifica el estado de tu licencia.</p>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Seleccionar País / Región</label>
-                                <select id="countrySelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400">
-                                    <option value="VEN">Venezuela (VES / BCB / Euro)</option>
-                                    <option value="MEX">México (MXN)</option>
-                                    <option value="COL">Colombia (COP)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Clave de Licencia</label>
-                                <input type="text" id="licenseKeyInput" value="NEXUS-CORP-2026-VIP" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400 font-mono">
-                            </div>
-                            <button onclick="validarLicenciaGlobal()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl transition shadow-lg text-sm">
-                                Validar Licencia y País
-                            </button>
-                        </div>
-
-                        <div class="lg:col-span-2 bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
-                            <div id="serverLog" class="bg-slate-950 font-mono text-xs text-cyan-400 p-5 rounded-2xl border border-slate-800 h-52 overflow-y-auto space-y-2 leading-relaxed">
-                                <p>[SYSTEM] Servidor global multi-país y motor POS inicializado. Selecciona tu país e idioma para comenzar.</p>
-                            </div>
-                            <div class="mt-4 pt-4 border-t border-slate-800 text-xs text-slate-400 flex justify-between">
-                                <span>Plataforma SaaS en Línea</span>
-                                <span>Soporte Bot: @cobro_deseo_privado_bot</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <footer class="bg-slate-950 border-t border-slate-800 py-8 text-center text-sm text-slate-400">
-            <p>&copy; 2026 Nexus ERP & POS. Todos los derechos reservados. Operaciones respaldadas por Telegram y Binance.</p>
-        </footer>
-
-        <script>
-            function cambiarIdioma() {
-                const lang = document.getElementById('globalLanguage').value;
-                const log = document.getElementById('serverLog');
-                const time = new Date().toLocaleTimeString();
-                log.innerHTML += \`<p class="text-slate-400">[\\${time}] [LANG] Interfaz actualizada al idioma: \${lang.toUpperCase()}</p>\`;
-                log.scrollTop = log.scrollHeight;
+    <!-- Script de Traducción y Monedas -->
+    <script>
+        // Diccionario de Traducciones Multi-idioma
+        const translations = {
+            es: {
+                page_title: "Nexus ERP - El ERP Autónomo impulsado por Bots",
+                nav_features: "Características", nav_about: "Nosotros", nav_pricing: "Licencias", nav_isps: "ISPs y TV", nav_contact: "Contacto",
+                m1: "🚀 Automatización Total", m2: "🤖 Ecosistema de Bots 24/7", m3: "💬 Integración con Telegram", m4: "💰 Pagos con Binance Pay", m5: "📊 Control Financiero y Fiscal", m6: "☁️ Nube Segura", m7: "📡 Módulo Especializado ISPs",
+                hero_title: "Tu empresa en <span>piloto automático</span>, sin fricción administrativa.",
+                hero_desc: "El ERP autónomo gestionado por bots inteligentes. Compra tu licencia vía Telegram, paga con Binance, selecciona tu país y deja que el sistema configure tu contabilidad, inventarios y cortes automáticos.",
+                btn_buy: "Comprar Licencia", btn_more: "Conocer Más",
+                feat_title: "Ecosistema Autónomo Integrado",
+                f1_title: "Bots de Operación 24/7", f1_desc: "Gestión automatizada de contabilidad fiscal adaptada a las leyes de tu país, control de almacén y reposición de inventario en tiempo real.",
+                f2_title: "Control Universal de Pérdidas", f2_desc: "Rastreo transversal de mermas, diferencias en caja, desperdicios y costos ocultos para blindar la rentabilidad de tu negocio desde el día uno.",
+                f3_title: "Comanda Digital Integrada", f3_desc: "Opción flexible ideal para locales de comida rápida, conectando al instante la toma de pedidos con la cocina y descargando insumos automáticamente.",
+                about_title: "Quiénes Somos",
+                mission_title: "Nuestra Misión", mission_desc: "Democratizar la tecnología empresarial de alto nivel, entregando a emprendedores y corporaciones herramientas de automatización sofisticadas pero de uso sumamente sencillo y autónomo.",
+                vision_title: "Nuestra Visión", vision_desc: "Convertirnos en el ecosistema ERP inteligente líder en agilidad comercial y administrativa, eliminando las barreras geográficas y operativas en toda la región mediante la integración de Telegram y Binance.",
+                pricing_title: "Planes y Licencias",
+                p1_name: "Negocio Pequeño", p1_desc: "Ideal para emprendimientos y comercios locales.",
+                p1_f1: "Contabilidad básica", p1_f2: "Control de inventario sencillo", p1_f3: "Control básico de pérdidas", p1_f4: "Opción de módulo de comanda (Comida Rápida)", p1_f5: "Suspensión automática por impago",
+                p2_name: "Negocio Mediano", p2_desc: "Para comercios en expansión y mayor volumen.",
+                p2_f1: "Contabilidad avanzada con cumplimiento fiscal", p2_f2: "Almacén con reposición automática", p2_f3: "Control analítico de pérdidas y auditoría", p2_f4: "Múltiples usuarios con permisos", p2_f5: "Suspensión automática por impago",
+                p3_name: "Empresa Grande", p3_desc: "Macro-operación, corporaciones e industria.",
+                p3_f1: "Ecosistema completo de bots autónomos", p3_f2: "Control de production macro", p3_f3: "Logística avanzada y rutas de despacho", p3_f4: "Control macro de pérdidas en cadena", p3_f5: "Suspensión automática por impago",
+                per_month: "/ mes", btn_telegram: "Adquirir vía Telegram",
+                isp_title: "Solución Avanzada para ISPs y TV por Suscripción", isp_subtitle: "Automatización de Cobros y Cortes de Servicio",
+                isp_desc: "Si tu empresa provee internet o televisión por suscripción, Nexus ERP gestiona el padrón de abonados, envía alertas de vencimiento, ejecuta la suspensión y corte automático del servicio ante impagos, y lo restaura al instante apenas el cliente cancela su cuota.",
+                isp_btn: "Consultar Integración",
+                contact_title: "Contacto Oficial", contact_desc: "¿Tienes dudas, requieres soporte técnico avanzado o necesitas una cotización corporativa a la medida? Escríbenos directamente:",
+                contact_sub: "Atención rápida a través de nuestro equipo de soporte corporativo.",
+                social_title: "Síguenos en nuestras comunidades y redes",
+                float_support: "💬 Soporte 24/7",
+                footer_text: "© 2026 Nexus ERP • Deseo Privado. Todos los derechos reservados. Operaciones respaldadas por Telegram y Binance."
+            },
+            en: {
+                page_title: "Nexus ERP - The Autonomous Bot-Driven ERP",
+                nav_features: "Features", nav_about: "About Us", nav_pricing: "Pricing", nav_isps: "ISPs & TV", nav_contact: "Contact",
+                m1: "🚀 Total Automation", m2: "🤖 24/7 Bot Ecosystem", m3: "💬 Telegram Integration", m4: "💰 Binance Pay", m5: "📊 Financial & Tax Control", m6: "☁️ Secure Cloud", m7: "📡 ISP Specialized Module",
+                hero_title: "Your business on <span>autopilot</span>, with zero administrative friction.",
+                hero_desc: "The autonomous ERP managed by smart bots. Buy your license via Telegram, pay with Binance, select your country and let the system configure your accounting, inventory and automated cuts.",
+                btn_buy: "Get License", btn_more: "Learn More",
+                feat_title: "Integrated Autonomous Ecosystem",
+                f1_title: "24/7 Operation Bots", f1_desc: "Automated fiscal accounting management adapted to your country's laws, warehouse control, and real-time inventory replenishment.",
+                f2_title: "Universal Loss Control", f2_desc: "Cross-cutting tracking of shrinkage, cash differences, waste, and hidden costs to secure business profitability from day one.",
+                f3_title: "Integrated Digital KOT", f3_desc: "Flexible option ideal for fast-food outlets, instantly connecting order intake with the kitchen and automatically deducting supplies.",
+                about_title: "Who We Are",
+                mission_title: "Our Mission", mission_desc: "Democratize high-level enterprise technology, empowering entrepreneurs and corporations with sophisticated yet simple and autonomous automation tools.",
+                vision_title: "Our Vision", vision_desc: "Become the leading intelligent ERP ecosystem in commercial and administrative agility, eliminating geographical and operational barriers across the region through Telegram and Binance.",
+                pricing_title: "Plans & Licenses",
+                p1_name: "Small Business", p1_desc: "Ideal for startups and local shops.",
+                p1_f1: "Basic accounting", p1_f2: "Simple inventory control", p1_f3: "Basic loss control", p1_f4: "Fast food order module option", p1_f5: "Automatic suspension for non-payment",
+                p2_name: "Medium Business", p2_desc: "For expanding businesses and higher volume.",
+                p2_f1: "Advanced accounting with tax compliance", p2_f2: "Warehouse with auto-replenishment", p2_f3: "Analytical loss control & audit", p2_f4: "Multiple users with permissions", p2_f5: "Automatic suspension for non-payment",
+                p3_name: "Large Enterprise", p3_desc: "Macro-operations, corporations and industry.",
+                p3_f1: "Complete autonomous bot ecosystem", p3_f2: "Macro production control", p3_f3: "Advanced logistics & dispatch routes", p3_f4: "Chain-wide macro loss control", p3_f5: "Automatic suspension for non-payment",
+                per_month: "/ mo", btn_telegram: "Buy via Telegram",
+                isp_title: "Advanced Solution for ISPs & Subscription TV", isp_subtitle: "Billing Automation & Service Cuts",
+                isp_desc: "If your company provides internet or subscription TV, Nexus ERP manages subscriber registries, sends expiration alerts, executes automatic service suspension upon non-payment, and instantly restores it upon payment.",
+                isp_btn: "Inquire Integration",
+                contact_title: "Official Contact", contact_desc: "Have questions, need advanced tech support or a custom corporate quote? Write to us directly:",
+                contact_sub: "Fast assistance through our corporate support team.",
+                social_title: "Follow us on our communities and networks",
+                float_support: "💬 24/7 Support",
+                footer_text: "© 2026 Nexus ERP • Deseo Privado. All rights reserved. Operations backed by Telegram and Binance."
+            },
+            zh: {
+                page_title: "Nexus ERP - 智能机器人驱动的自主企业资源计划系统",
+                nav_features: "功能特性", nav_about: "关于我们", nav_pricing: "价格许可", nav_isps: "ISP与电视", nav_contact: "联系我们",
+                m1: "🚀 全面自动化", m2: "🤖 7x24小时机器人生态系统", m3: "💬 纸飞机(Telegram)集成", m4: "💰 币安支付(Binance Pay)", m5: "📊 财务与税务控制", m6: "☁️ 安全云端", m7: "📡 ISP专业模块",
+                hero_title: "让您的企业实现<span>自动驾驶</span>，零行政摩擦。",
+                hero_desc: "由智能机器人管理的自主ERP。通过Telegram购买许可证，使用币安支付，选择您的国家并让系统自动配置您的会计、库存和结算。",
+                btn_buy: "购买许可", btn_more: "了解更多",
+                feat_title: "集成自主生态系统",
+                f1_title: "7x24小时运营机器人", f1_desc: "适应您所在国家法律的自动化财务会计管理、仓库控制和实时库存补货。",
+                f2_title: "全方位损失控制", f2_desc: "跨业务追踪损耗、现金差异、浪费和隐藏成本，确保从第一天起就保障盈利能力。",
+                f3_title: "集成数字点餐系统", f3_desc: "快餐店的理想选择，瞬间将订单接收与厨房连接，并自动扣减库存物资。",
+                about_title: "关于我们",
+                mission_title: "我们的使命", mission_desc: "使高级企业技术民主化，为企业和机构提供复杂但极其简单且自主的自动化工具。",
+                vision_title: "我们的愿景", vision_desc: "通过Telegram和Binance的集成，成为商业和行政灵活性领域领先的智能ERP生态系统，消除整个地区的地理和运营障碍。",
+                pricing_title: "方案与许可",
+                p1_name: "小型企业", p1_desc: "非常适合初创企业和本地商户。",
+                p1_f1: "基础会计", p1_f2: "简单库存控制", p1_f3: "基础损失控制", p1_f4: "快餐点餐模块选项", p1_f5: "欠费自动暂停",
+                p2_name: "中型企业", p2_desc: "适用于扩展中的企业和更大业务量。",
+                p2_f1: "具备税务合规的高级会计", p2_f2: "自动补货仓库", p2_f3: "分析性损失控制与审计", p2_f4: "多用户权限管理", p2_f5: "欠费自动暂停",
+                p3_name: "大型企业", p3_desc: "宏观运营、跨国公司和工业。",
+                p3_f1: "完整的自主机器人生态系统", p3_f2: "宏观生产控制", p3_f3: "高级物流与派送路线", p3_f4: "全链条宏观损失控制", p3_f5: "欠费自动暂停",
+                per_month: "/ 月", btn_telegram: "通过Telegram购买",
+                isp_title: "ISP及订阅电视的高级解决方案", isp_subtitle: "账单自动化与服务切断",
+                isp_desc: "如果您提供互联网或电视订阅服务，Nexus ERP可管理用户档案、发送到期提醒、在未付款时自动切断服务，并在客户缴费后瞬间恢复。",
+                isp_btn: "咨询集成",
+                contact_title: "官方联系方式", contact_desc: "有疑问、需要高级技术支持或定制企业报价？请直接给我们写信：",
+                contact_sub: "通过我们的企业支持团队提供快速协助。",
+                social_title: "关注我们的社群与社交网络",
+                float_support: "💬 24/7 客服支持",
+                footer_text: "© 2026 Nexus ERP • Deseo Privado. 版权所有。运营受 Telegram 和 Binance 支持。"
             }
+        };
 
-            async function validarLicenciaGlobal() {
-                const key = document.getElementById('licenseKeyInput').value;
-                const country = document.getElementById('countrySelect').value;
-                const lang = document.getElementById('globalLanguage').value;
-                const logBox = document.getElementById('serverLog');
-                const time = new Date().toLocaleTimeString();
+        // Rellenar otros idiomas de forma segura con inglés por defecto si faltan
+        ['pt', 'fr', 'de', 'it', 'ja', 'ar', 'ru'].forEach(lang => {
+            translations[lang] = translations.en;
+        });
 
-                try {
-                    const response = await fetch('/api/verify-global', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ key, country, language: lang })
-                    });
-                    const data = await response.json();
-                    
-                    if(data.success) {
-                        logBox.innerHTML += \`<p class="text-emerald-400">[\\${time}] [SUCCESS] \${data.message} | País: \${data.country} | Moneda: \${data.currency}</p>\`;
-                    } else {
-                        logBox.innerHTML += \`<p class="text-amber-400">[\\${time}] [WARNING] \${data.message}</p>\`;
-                    }
-                } catch (e) {
-                    logBox.innerHTML += \`<p class="text-red-400">[\\${time}] [ERROR] Error de conexión con el servidor.</p>\`;
+        function cambiarIdioma() {
+            const lang = document.getElementById('langSelector').value;
+            const t = translations[lang] || translations.es;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) {
+                    el.innerHTML = t[key];
                 }
-                logBox.scrollTop = logBox.scrollHeight;
+            });
+        }
+
+        // Lógica de cambio de país y monedas
+        function cambiarPais() {
+            const selector = document.getElementById('countrySelector');
+            const pais = selector.value;
+            const p1 = document.getElementById('price1');
+            const p2 = document.getElementById('price2');
+            const p3 = document.getElementById('price3');
+
+            const precios = {
+                ar: { p1: '$22,500', p2: '$67,500', p3: '$180,000', mon: 'ARS' },
+                bo: { p1: 'Bs. 105', p2: 'Bs. 315', p3: 'Bs. 840', mon: 'BOB' },
+                br: { p1: 'R$ 75', p2: 'R$ 225', p3: 'R$ 600', mon: 'BRL' },
+                cl: { p1: '$14,200', p2: '$42,600', p3: '$113,600', mon: 'CLP' },
+                co: { p1: '$65,000', p2: '$195,000', p3: '$520,000', mon: 'COP' },
+                cr: { p1: '₡8,800', p2: '₡26,400', p3: '₡70,400', mon: 'CRC' },
+                do: { p1: 'RD$ 880', p2: 'RD$ 2,640', p3: 'RD$ 7,040', mon: 'DOP' },
+                ec: { p1: '$15', p2: '$45', p3: '$120', mon: 'USD' },
+                es: { p1: '€14', p2: '€42', p3: '€112', mon: 'EUR' },
+                eu_other: { p1: '€14', p2: '€42', p3: '€112', mon: 'EUR' },
+                gt: { p1: 'Q115', p2: 'Q345', p3: 'Q920', mon: 'GTQ' },
+                hn: { p1: 'L 370', p2: 'L 1,110', p3: 'L 2,960', mon: 'HNL' },
+                mx: { p1: '$300', p2: '$900', p3: '$2,400', mon: 'MXN' },
+                ni: { p1: 'C$ 550', p2: 'C$ 1,650', p3: 'C$ 4,400', mon: 'NIO' },
+                pa: { p1: '$15', p2: '$45', p3: '$120', mon: 'USD' },
+                pe: { p1: 'S/. 56', p2: 'S/. 168', p3: 'S/. 448', mon: 'PEN' },
+                py: { p1: '₲115,000', p2: '₲345,000', p3: '₲920,000', mon: '₲' },
+                uy: { p1: '$620', p2: '$1,860', p3: '$4,960', mon: 'UYU' },
+                ve: { p1: 'Bs. 570', p2: 'Bs. 1,710', p3: 'Bs. 4,560', mon: 'Bs.' },
+                us: { p1: '$15', p2: '$45', p3: '$120', mon: 'USD' },
+                ca: { p1: '$15', p2: '$45', p3: '$120', mon: 'USD' },
+                cn: { p1: '$15', p2: '$45', p3: '$120', mon: 'USD' },
+                jp: { p1: '$15', p2: '$45', p3: '$120', mon: 'USD' },
+                asia_other: { p1: '$15', p2: '$45', p3: '$120', mon: 'USD' },
+                oceania: { p1: '$15', p2: '$45', p3: '$120', mon: 'USD' },
+                africa: { p1: '$15', p2: '$45', p3: '$120', mon: 'USD' },
+                global_usd: { p1: '$15', p2: '$45', p3: '$120', mon: 'USD' }
+            };
+
+            const lang = document.getElementById('langSelector').value;
+            const perMonthText = (lang === 'zh') ? '/ 月' : (lang === 'en' ? '/ mo' : '/ mes');
+
+            if (precios[pais]) {
+                const p = precios[pais];
+                p1.innerHTML = `${p.p1} <span>${p.mon} ${perMonthText}</span>`;
+                p2.innerHTML = `${p.p2} <span>${p.mon} ${perMonthText}</span>`;
+                p3.innerHTML = `${p.p3} <span>${p.mon} ${perMonthText}</span>`;
+            } else {
+                p1.innerHTML = `$15 <span>USD ${perMonthText}</span>`;
+                p2.innerHTML = `$45 <span>USD ${perMonthText}</span>`;
+                p3.innerHTML = `$120 <span>USD ${perMonthText}</span>`;
             }
-        </script>
-    </body>
-    </html>
-    `);
-});
-
-// ============================================================================
-// 2. BACKEND API Y MOTOR DE AUTOMATIZACIÓN
-// ============================================================================
-app.post('/api/verify-global', (req, res) => {
-    const { key, country, language } = req.body;
-
-    db.auditLogs.push({
-        timestamp: new Date().toISOString(),
-        event: "GLOBAL_VERIFY",
-        details: `Validación clave ${key} para país ${country} en idioma ${language}`
-    });
-
-    const countryConfig = db.countriesConfig[country] || { currency: "USD", name: "Global" };
-
-    if (db.licenses[key]) {
-        const lic = db.licenses[key];
-        res.json({
-            success: true,
-            country: countryConfig.name,
-            currency: countryConfig.currency,
-            message: `Licencia VÁLIDA. Entorno configurado correctamente para ${countryConfig.name} (${countryConfig.currency}).`
-        });
-    } else {
-        res.json({
-            success: false,
-            message: "Licencia no válida o vencida. Adquiere tu acceso a través de @cobro_deseo_privado_bot."
-        });
-    }
-});
-
-// Webhook para pagos USDT vía Binance Pay / MacroDroid / Telegram
-app.post('/api/webhook/payment', (req, res) => {
-    const { secret, clientName, licenseKey, country, language } = req.body;
-
-    if (secret !== WEBHOOK_SECRET_KEY) {
-        return res.status(403).json({ error: "Token de seguridad inválido." });
-    }
-
-    db.licenses[licenseKey] = {
-        status: "ACTIVE",
-        tier: "Enterprise Tier ($120/mes)",
-        expires: new Date(Date.now() + 45 * 86400000).toISOString().split('T')[0], // 30 días + 15 de bono
-        country: country || "VEN",
-        language: language || "es",
-        company: clientName || "Cliente Corporativo"
-    };
-
-    console.log(`[AUTOMATION] Licencia emitida y activada para ${clientName} en país ${country}`);
-    res.json({ success: true, message: "Licencia emitida y activada con éxito." });
-});
-
-app.listen(PORT, () => {
-    console.log(`Servidor Nexus ERP & POS Global ejecutándose en el puerto ${PORT}`);
-});
-
+        }
+    </script>
+</body>
+</html>
