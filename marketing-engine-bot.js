@@ -10,7 +10,7 @@ app.post('/api/enviar-a-publer', async (req, res) => {
         const { titulo, contenido, mediaUrl } = req.body;
 
         // Aquí colocas la URL del Webhook que te proporcione tu plataforma puente (ej. Make)
-        const webhookUrl = 'TU_WEBHOOK_URL_DE_MAKE_AQUI';
+       const webhookUrl1 = 'https://hooks.zapier.com/hooks/catch/...';
 
         const payload = {
             workspace: 'deseo privado',
