@@ -9,8 +9,8 @@ app.post('/api/enviar-a-publer', async (req, res) => {
     try {
         const { titulo, contenido, mediaUrl } = req.body;
 
-        // Aquí colocas la URL del Webhook que te proporcione tu plataforma puente (ej. Make)
-https://hooks.zapier.com/hooks/catch/29053052/4mlgkve/
+        // URL del Webhook configurada correctamente como constante
+        const webhookUrl = 'https://hooks.zapier.com/hooks/catch/29053052/4mlgkve/';
 
         const payload = {
             workspace: 'deseo privado',
@@ -39,4 +39,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor de marketing corriendo en el puerto ${PORT}`);
 });
+
 
