@@ -791,7 +791,7 @@
             try {
                 const response = await fetch('/api/promo-price');
                 const data = await response.json();
-                
+               
                 if (data.success && data.isPromoActive) {
                     const banner = document.getElementById('promoBanner');
                     if (banner) {
