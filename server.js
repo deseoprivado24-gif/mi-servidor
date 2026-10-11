@@ -45,7 +45,6 @@ const db = {
 };
 
 const WEBHOOK_SECRET_KEY = "nexus_secure_secret_enterprise_2026";
-// Token fijo configurado directamente para evitar fallos de lectura
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || '8930061734:AAFZf_--kVQAWVOn-Cj2pUG6s6WkRj4Z50Y';
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 
@@ -83,7 +82,7 @@ function sendTelegramMessage(chatId, text, replyMarkup = null) {
     req.end();
 }
 
-// Endpoint para verificar la tarifa promocional de la licencia desde la web
+// Endpoint para verificar la tarifa promocional
 app.get('/api/promo-price', (req, res) => {
     const isPromoActive = db.licensedCount < 100;
     const discountFactor = isPromoActive ? 0.5 : 1.0;
@@ -103,45 +102,93 @@ app.get('/api/promo-price', (req, res) => {
     });
 });
 
-// Endpoint de validación global de licencias y país
-app.post('/api/verify-global', (req, res) => {
-    const { key, country, language } = req.body;
-    const countryConfig = db.countriesConfig[country] || { currency: "USD", name: "Global" };
+// Endpoint automatizado para recibir pagos (MacroDroid / Binance Pay / P2P)
+app.post('/api/webhook/payment', (req, res) => {
+    const { secret, clientName, licenseKey, country, language, planType } = req.body;
 
-    if (db.licenses[key] && db.licenses[key].status === "ACTIVE") {
-        res.json({
-            success: true,
-            country: countryConfig.name,
-            currency: countryConfig.currency,
-            company: db.licenses[key].company,
-            message: `Licencia VÁLIDA. Entorno configurado para ${countryConfig.name} (${countryConfig.currency}).`
-        });
-    } else {
-        res.json({
-            success: false,
-            message: "Licencia no válida o vencida. Adquiere tu acceso a través de @cobro_deseo_privado_bot."
-        });
+    if (secret !== WEBHOOK_SECRET_KEY) {
+        return res.status(403).json({ error: "Token de seguridad inválido." });
     }
+
+    db.licensedCount += 1;
+    const generatedKey = licenseKey || `NEXUS-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const tempUsername = `user_${Math.floor(1000 + Math.random() * 9000)}`;
+    const tempPassword = Math.random().toString(36).slice(-8);
+
+    db.licenses[generatedKey] = {
+        status: "ACTIVE",
+        tier: planType || "Licencia Completa ERP",
+        expires: new Date(Date.now() + 45 * 86400000).toISOString().split('T')[0],
+        country: country || "VEN",
+        language: language || "es",
+        company: clientName || "Cliente Corporativo"
+    };
+
+    db.users[tempUsername] = {
+        password: tempPassword,
+        licenseKey: generatedKey,
+        mustChangePassword: true
+    };
+
+    console.log(`[AUTOMACIÓN] Licencia ${generatedKey} emitida para ${clientName} (${db.licensedCount}/100 promocionales).`);
+
+    res.json({
+        success: true,
+        message: "Licencia emitida y activada con éxito.",
+        licenseKey: generatedKey,
+        credentials: {
+            username: tempUsername,
+            password: tempPassword,
+            mustChangePassword: true
+        }
+    });
 });
 
-// Webhook que recibe las interacciones de tu bot en Telegram
+// Webhook principal de Telegram (Mensajes y Botones)
 app.post(`/webhook/${TELEGRAM_TOKEN}`, (req, res) => {
     const update = req.body;
 
+    // Manejo de clics en botones interactivos (Callback Queries)
+    if (update.callback_query) {
+        const chatId = update.callback_query.message.chat.id;
+        const data = update.callback_query.data;
+
+        if (data === 'ver_qr') {
+            sendTelegramMessage(chatId, `📱 *Código QR y Datos de Pago USDT (Binance Pay / P2P):*\\n\\n• *Binance ID / Correo:* cambiostoday24@gmail.com\\n• *Red:* TRC20 / BEP20\\n\\nRealiza tu pago y reporta tu comprobante para emitir tu licencia al instante.`);
+        } else if (data === 'cortesia') {
+            db.licensedCount += 1;
+            const newKey = `NEXUS-CORTESIA-${Math.floor(1000 + Math.random() * 9000)}`;
+            db.licenses[newKey] = {
+                status: "ACTIVE",
+                tier: "Licencia Cortesía VIP",
+                expires: "2027-12-31",
+                country: "VEN",
+                currency: "VES",
+                company: "Comercial Larry C.A."
+            };
+            sendTelegramMessage(chatId, `✅ *¡Licencia de cortesía generada con éxito!*\\n\\n• *Clave:* \`${newKey}\`\\n• *Estado:* Activa hasta 2027.\\n• *Cupos usados:* ${db.licensedCount}/100.`);
+        } else if (data === 'ver_inventario') {
+            sendTelegramMessage(chatId, `📊 *Estado del Servidor y Licencias:*\\n• Licencias Activas: ${Object.keys(db.licenses).length}\\n• Cupos Promocionales: ${db.licensedCount}/100 utilizados.`);
+        } else if (data === 'ver_planes') {
+            sendTelegramMessage(chatId, `📦 *Planes Disponibles - Nexus ERP:*\\n• Básico ($15)\\n• Premium ($45)\\n• Enterprise ($120)\\n\\nPaga por Binance Pay al correo cambiostoday24@gmail.com y solicita tu activación.`);
+        }
+        return res.sendStatus(200);
+    }
+
+    // Manejo de mensajes de texto normales
     if (update.message && update.message.text) {
         const chatId = update.message.chat.id;
         const textMessage = update.message.text.trim();
         const userName = update.message.from.first_name || 'Emprendedor';
 
-        // Acceso exclusivo de administrador por correo
         if (textMessage === 'cambiostoday24@gmail.com') {
             const adminText = `👑 *¡Bienvenido al Panel de Administración, Larry!*\\n\\nSistema *Nexus ERP & POS* sincronizado y operando con éxito en producción.\\n\\nSelecciona una opción de gestión:`;
             
             const adminKeyboard = {
                 inline_keyboard: [
                     [
-                        { text: "🎁 Generar Cortesía (/cortesia)", callback_data: "cortesia" },
-                        { text: "📊 Ver Inventario y Estado", callback_data: "ver_inventario" }
+                        { text: "🎁 Generar Cortesía", callback_data: "cortesia" },
+                        { text: "📊 Ver Inventario", callback_data: "ver_inventario" }
                     ],
                     [
                         { text: "📱 Mostrar Código QR de Pago", callback_data: "ver_qr" }
@@ -167,34 +214,6 @@ app.post(`/webhook/${TELEGRAM_TOKEN}`, (req, res) => {
         }
     }
 
-    res.sendStatus(200);
-});
-
-// Manejo de botones interactivos (Callback Queries) de Telegram
-app.post(`/webhook/callback/${TELEGRAM_TOKEN}`, (req, res) => {
-    const update = req.body;
-    if (update.callback_query) {
-        const chatId = update.callback_query.message.chat.id;
-        const data = update.callback_query.data;
-
-        if (data === 'ver_qr') {
-            sendTelegramMessage(chatId, `📱 *Código QR y Datos de Pago USDT (Binance Pay / P2P):*\\n\\n• *Binance ID / Correo:* cambiostoday24@gmail.com\\n• *Red:* TRC20 / BEP20\\n\\nRealiza tu pago y reporta tu comprobante para emitir tu licencia al instante.`);
-        } else if (data === 'cortesia') {
-            db.licensedCount += 1;
-            const newKey = `NEXUS-CORTESIA-${Math.floor(1000 + Math.random() * 9000)}`;
-            db.licenses[newKey] = {
-                status: "ACTIVE",
-                tier: "Licencia Cortesía VIP",
-                expires: "2027-12-31",
-                country: "VEN",
-                currency: "VES",
-                company: "Comercial Larry C.A."
-            };
-            sendTelegramMessage(chatId, `✅ *¡Licencia de cortesía generada con éxito!*\\n\\n• *Clave:* \`${newKey}\`\\n• *Estado:* Activa hasta 2027.\\n• *Cupos usados:* ${db.licensedCount}/100.`);
-        } else if (data === 'ver_inventario') {
-            sendTelegramMessage(chatId, `📊 *Estado del Servidor y Licencias:*\\n• Licencias Activas: ${Object.keys(db.licenses).length}\\n• Cupos Promocionales: ${db.licensedCount}/100 utilizados.`);
-        }
-    }
     res.sendStatus(200);
 });
 
