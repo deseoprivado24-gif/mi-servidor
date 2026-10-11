@@ -30,6 +30,17 @@
             position: relative;
         }
 
+        /* --- BANNER DE PROMOCIÓN --- */
+        .promo-banner {
+            background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+            color: #000;
+            text-align: center;
+            padding: 10px 20px;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+
         /* --- HEADER --- */
         header {
             display: flex;
@@ -513,6 +524,11 @@
 </head>
 <body>
 
+    <!-- Banner de Promoción 50% Descuento (Conectado con el servidor) -->
+    <div class="promo-banner" id="promoBanner">
+        🔥 PROMOCIÓN ESPECIAL: 50% DE DESCUENTO EN LICENCIAS PARA LOS PRIMEROS 100 USUARIOS
+    </div>
+
     <!-- Header / Barra de Navegación -->
     <header>
         <div class="logo-container">
@@ -768,8 +784,28 @@
         <p data-i18n="footer_text">&copy; 2026 Nexus ERP &bull; Deseo Privado. Todos los derechos reservados. Operaciones respaldadas por Telegram y Binance.</p>
     </footer>
 
-    <!-- Script de Traducción y Monedas -->
+    <!-- Script de Traducción, Monedas y Promoción -->
     <script>
+        // Consultar estado de la promoción al servidor de producción
+        async function checkPromoStatus() {
+            try {
+                const response = await fetch('/api/promo-price');
+                const data = await response.json();
+                
+                if (data.success && data.isPromoActive) {
+                    const banner = document.getElementById('promoBanner');
+                    if (banner) {
+                        banner.innerText = `🔥 PROMOCIÓN ESPECIAL: 50% DE DESCUENTO EN LICENCIA (Quedan ${100 - data.licensedCount} cupos disponibles)`;
+                    }
+                } else {
+                    const banner = document.getElementById('promoBanner');
+                    if (banner) banner.style.display = 'none';
+                }
+            } catch (err) {
+                console.log("Servidor en ejecución autónoma.");
+            }
+        }
+
         // Diccionario de Traducciones Multi-idioma
         const translations = {
             es: {
@@ -936,6 +972,12 @@
                 p3.innerHTML = `$120 <span>USD ${perMonthText}</span>`;
             }
         }
+
+        // Ejecutar al cargar la página para verificar la promo y poner los precios
+        window.onload = function() {
+            checkPromoStatus();
+            cambiarPais();
+        };
     </script>
 </body>
 </html>
