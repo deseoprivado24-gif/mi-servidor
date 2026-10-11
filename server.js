@@ -1,10 +1,11 @@
 /**
  * ============================================================================
- * NEXUS ERP & POS - SERVIDOR OFICIAL PARA PRODUCCIÓN
+ * NEXUS ERP & POS - SERVIDOR OFICIAL PARA PRODUCCIÓN Y BOTS AUTÓNOMOS
  * ============================================================================
  */
 
 const express = require('express');
+const https = require('https');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,7 +20,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Base de datos de licencias, usuarios e inventario
+// Base de datos lógica de licencias, usuarios e inventario
 const db = {
     licensedCount: 0, // Contador para el límite de 100 licencias promocionales al 50%
     licenses: {
@@ -44,8 +45,44 @@ const db = {
 };
 
 const WEBHOOK_SECRET_KEY = "nexus_secure_secret_enterprise_2026";
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || '7930061734:AAH...';
+const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 
-// Endpoint para verificar la tarifa promocional de la licencia
+// Función auxiliar para enviar mensajes a Telegram
+function sendTelegramMessage(chatId, text, replyMarkup = null) {
+    const data = JSON.stringify({
+        chat_id: chatId,
+        text: text,
+        parse_mode: 'Markdown',
+        reply_markup: replyMarkup
+    });
+
+    const url = new URL(`${TELEGRAM_API}/sendMessage`);
+    const options = {
+        hostname: url.hostname,
+        path: url.pathname,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(data)
+        }
+    };
+
+    const req = https.request(options, (res) => {
+        let responseBody = '';
+        res.on('data', (chunk) => responseBody += chunk);
+        res.on('end', () => {});
+    });
+
+    req.on('error', (error) => {
+        console.error('Error enviando mensaje a Telegram:', error);
+    });
+
+    req.write(data);
+    req.end();
+}
+
+// Endpoint para verificar la tarifa promocional de la licencia desde la web
 app.get('/api/promo-price', (req, res) => {
     const isPromoActive = db.licensedCount < 100;
     const discountFactor = isPromoActive ? 0.5 : 1.0;
@@ -94,13 +131,8 @@ app.post('/api/webhook/payment', (req, res) => {
         return res.status(403).json({ error: "Token de seguridad inválido." });
     }
 
-    // Incrementar contador de licencias con descuento
     db.licensedCount += 1;
-
-    // Generar clave de licencia si no se especifica
     const generatedKey = licenseKey || `NEXUS-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-    // Generar usuario y contraseña temporal autónoma
     const tempUsername = `user_${Math.floor(1000 + Math.random() * 9000)}`;
     const tempPassword = Math.random().toString(36).slice(-8);
 
@@ -133,7 +165,41 @@ app.post('/api/webhook/payment', (req, res) => {
     });
 });
 
-// Rutas integradas de Inventario y Escaneo (Código de Barras / QR)
+// Webhook que recibe las interacciones de tu bot en Telegram
+app.post(`/webhook/${TELEGRAM_TOKEN}`, (req, res) => {
+    const update = req.body;
+    
+    if (update.message && update.message.text) {
+        const chatId = update.message.chat.id;
+        const textMessage = update.message.text.trim().toLowerCase();
+        const userName = update.message.from.first_name || 'Emprendedor';
+
+        if (textMessage.includes('/start') || textMessage.includes('hola')) {
+            const welcomeText = `¡Hola, *${userName}*! 🤖 Bienvenido a *Nexus ERP*, el sistema autónomo impulsado por bots.\n\nSelecciona una opción para gestionar tu licencia o consultar nuestros planes:`;
+            
+            const keyboard = {
+                inline_keyboard: [
+                    [
+                        { text: "📦 Ver Planes y Precios", callback_data: "ver_planes" },
+                        { text: "💳 Pagar con Binance Pay", callback_data: "pagar_binance" }
+                    ],
+                    [
+                        { text: "📡 Módulo ISPs y TV", callback_data: "ver_isps" },
+                        { text: "💬 Soporte 24/7", url: "https://t.me/cobro_deseo_privado_bot" }
+                    ]
+                ]
+            };
+
+            sendTelegramMessage(chatId, welcomeText, keyboard);
+        } else {
+            sendTelegramMessage(chatId, `Recibido. Escribe /start para desplegar el menú de automatización y licencias.`);
+        }
+    }
+    
+    res.sendStatus(200);
+});
+
+// Rutas de Inventario y Escaneo
 app.get('/api/inventory', (req, res) => {
     res.json({ success: true, items: db.inventory });
 });
