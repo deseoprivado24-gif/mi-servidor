@@ -45,7 +45,8 @@ const db = {
 };
 
 const WEBHOOK_SECRET_KEY = "nexus_secure_secret_enterprise_2026";
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || '8930061734:AAFZf_--kVQAWVOn-Cj2pUG6s6WkRj4Z50Y';
+// Token exacto corregido
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || '8930061734:AAFZf_--kVQAWVOn-CjpUG6s6WkRj4Z5s0Y';
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 
 // Función auxiliar para enviar mensajes a Telegram
@@ -130,8 +131,6 @@ app.post('/api/webhook/payment', (req, res) => {
         mustChangePassword: true
     };
 
-    console.log(`[AUTOMACIÓN] Licencia ${generatedKey} emitida para ${clientName} (${db.licensedCount}/100 promocionales).`);
-
     res.json({
         success: true,
         message: "Licencia emitida y activada con éxito.",
@@ -144,7 +143,7 @@ app.post('/api/webhook/payment', (req, res) => {
     });
 });
 
-// Webhook principal de Telegram (Mensajes y Botones)
+// Webhook principal de Telegram (Mensajes y Botones con el token exacto)
 app.post(`/webhook/${TELEGRAM_TOKEN}`, (req, res) => {
     const update = req.body;
 
@@ -220,3 +219,4 @@ app.post(`/webhook/${TELEGRAM_TOKEN}`, (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor Nexus ERP ejecutándose en el puerto ${PORT}`);
 });
+
