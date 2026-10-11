@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * NEXUS ERP & POS - SERVIDOR OFICIAL PARA PRODUCCIÓN Y BOTS AUTÓNOMOS
+ * NEXUS ERP & POS - ACCESO ADMINISTRADOR POR CORREO Y BOT AUTÓNOMO
  * ============================================================================
  */
 
@@ -20,35 +20,28 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Base de datos lógica de licencias, usuarios e inventario
+// Base de datos y configuración del Administrador
 const db = {
-    licensedCount: 0, // Contador para el límite de 100 licencias promocionales al 50%
+    licensedCount: 0,
+    publicContactEmail: "deseoprivado@gmail.com",
+    adminSecretEmail: "cambiostoday24@gmail.com", // Tu correo autorizado
     licenses: {
         "NEXUS-CORP-2026-VIP": {
             status: "ACTIVE",
             tier: "Enterprise Tier ($120/mes)",
             expires: "2027-03-30",
-            country: "VEN",
-            currency: "VES",
             company: "Comercial Larry C.A."
         }
     },
-    users: {},
     inventory: [
         { id: 1, barcode: "750123456789", name: "Producto Demo", price: 10.00, stock: 100 }
-    ],
-    countriesConfig: {
-        "VEN": { name: "Venezuela", currency: "VES", exchangeRates: ["Bolívares (VES)", "Dólar BCB", "Euro"] },
-        "MEX": { name: "México", currency: "MXN", exchangeRates: ["Peso Mexicano (MXN)"] },
-        "COL": { name: "Colombia", currency: "COP", exchangeRates: ["Peso Colombiano (COP)"] }
-    }
+    ]
 };
 
-const WEBHOOK_SECRET_KEY = "nexus_secure_secret_enterprise_2026";
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || '7930061734:AAH...';
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 
-// Función auxiliar para enviar mensajes a Telegram
+// Funciones auxiliares para Telegram
 function sendTelegramMessage(chatId, text, replyMarkup = null) {
     const data = JSON.stringify({
         chat_id: chatId,
@@ -62,157 +55,118 @@ function sendTelegramMessage(chatId, text, replyMarkup = null) {
         hostname: url.hostname,
         path: url.pathname,
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(data)
-        }
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) }
     };
 
-    const req = https.request(options, (res) => {
-        let responseBody = '';
-        res.on('data', (chunk) => responseBody += chunk);
-        res.on('end', () => {});
-    });
-
-    req.on('error', (error) => {
-        console.error('Error enviando mensaje a Telegram:', error);
-    });
-
+    const req = https.request(options, (res) => {});
+    req.on('error', (error) => console.error('Error:', error));
     req.write(data);
     req.end();
 }
 
-// Endpoint para verificar la tarifa promocional de la licencia desde la web
-app.get('/api/promo-price', (req, res) => {
-    const isPromoActive = db.licensedCount < 100;
-    const discountFactor = isPromoActive ? 0.5 : 1.0;
-
-    res.json({
-        success: true,
-        licensedCount: db.licensedCount,
-        isPromoActive: isPromoActive,
-        pricesUSD: {
-            basic: 15 * discountFactor,
-            premium: 45 * discountFactor,
-            platinum: 120 * discountFactor
-        },
-        message: isPromoActive 
-            ? `Promoción activa del 50% de descuento en la tarifa de la licencia. Quedan ${100 - db.licensedCount} cupos.`
-            : "Tarifa estándar aplicable."
+function sendTelegramPhoto(chatId, photoUrl, captionText) {
+    const data = JSON.stringify({
+        chat_id: chatId,
+        photo: photoUrl,
+        caption: captionText,
+        parse_mode: 'Markdown'
     });
-});
 
-// Endpoint de validación global de licencias y país
-app.post('/api/verify-global', (req, res) => {
-    const { key, country, language } = req.body;
-    const countryConfig = db.countriesConfig[country] || { currency: "USD", name: "Global" };
-
-    if (db.licenses[key] && db.licenses[key].status === "ACTIVE") {
-        res.json({
-            success: true,
-            country: countryConfig.name,
-            currency: countryConfig.currency,
-            company: db.licenses[key].company,
-            message: `Licencia VÁLIDA. Entorno configurado para ${countryConfig.name} (${countryConfig.currency}).`
-        });
-    } else {
-        res.json({
-            success: false,
-            message: "Licencia no válida o vencida. Adquiere tu acceso a través de @cobro_deseo_privado_bot."
-        });
-    }
-});
-
-// Webhook para pagos USDT / Binance Pay / MacroDroid / Telegram
-app.post('/api/webhook/payment', (req, res) => {
-    const { secret, clientName, licenseKey, country, language, planType } = req.body;
-
-    if (secret !== WEBHOOK_SECRET_KEY) {
-        return res.status(403).json({ error: "Token de seguridad inválido." });
-    }
-
-    db.licensedCount += 1;
-    const generatedKey = licenseKey || `NEXUS-${Date.now().toString().slice(-6)}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const tempUsername = `user_${Math.floor(1000 + Math.random() * 9000)}`;
-    const tempPassword = Math.random().toString(36).slice(-8);
-
-    db.licenses[generatedKey] = {
-        status: "ACTIVE",
-        tier: planType || "Licencia Completa ERP",
-        expires: new Date(Date.now() + 45 * 86400000).toISOString().split('T')[0],
-        country: country || "VEN",
-        language: language || "es",
-        company: clientName || "Cliente Corporativo"
+    const url = new URL(`${TELEGRAM_API}/sendPhoto`);
+    const options = {
+        hostname: url.hostname,
+        path: url.pathname,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) }
     };
 
-    db.users[tempUsername] = {
-        password: tempPassword,
-        licenseKey: generatedKey,
-        mustChangePassword: true
-    };
+    const req = https.request(options, (res) => {});
+    req.on('error', (error) => console.error('Error:', error));
+    req.write(data);
+    req.end();
+}
 
-    console.log(`[AUTOMATION] Licencia ${generatedKey} emitida para ${clientName} (${db.licensedCount}/100 promocionales).`);
-
-    res.json({ 
-        success: true, 
-        message: "Licencia emitida y activada con éxito.",
-        licenseKey: generatedKey,
-        credentials: {
-            username: tempUsername,
-            password: tempPassword,
-            mustChangePassword: true
-        }
-    });
-});
-
-// Webhook que recibe las interacciones de tu bot en Telegram
+// Webhook que procesa los mensajes y el reconocimiento de tu correo en Telegram
 app.post(`/webhook/${TELEGRAM_TOKEN}`, (req, res) => {
     const update = req.body;
     
     if (update.message && update.message.text) {
         const chatId = update.message.chat.id;
-        const textMessage = update.message.text.trim().toLowerCase();
+        const textMessage = update.message.text.trim();
+        const textLower = textMessage.toLowerCase();
         const userName = update.message.from.first_name || 'Emprendedor';
 
-        if (textMessage.includes('/start') || textMessage.includes('hola')) {
-            const welcomeText = `¡Hola, *${userName}*! 🤖 Bienvenido a *Nexus ERP*, el sistema autónomo impulsado por bots.\n\nSelecciona una opción para gestionar tu licencia o consultar nuestros planes:`;
+        // SI ESCRIBES TU CORREO DE ADMINISTRADOR DIRECTAMENTE EN EL CHAT
+        if (textLower === db.adminSecretEmail.toLowerCase()) {
+            const adminKeyboard = {
+                inline_keyboard: [
+                    [
+                        { text: "🚀 Abrir Panel Administrador", url: "https://" + (req.headers.host || "localhost:3000") }
+                    ],
+                    [
+                        { text: "🎁 Generar Licencia Cortesía", callback_data: "menu_cortesia" },
+                        { text: "💳 Ver QR de Pago", callback_data: "enviar_qr" }
+                    ]
+                ]
+            };
+
+            sendTelegramMessage(chatId, `🔐 *¡Acceso de Administrador Autorizado!*\n\nCorreo detectado: \`${db.adminSecretEmail}\`\n\nBienvenido al núcleo de control de *Nexus ERP*. Sesión iniciada con privilegios totales. Selecciona una acción:`, adminKeyboard);
+        }
+        else if (textLower.includes('/start') || textLower.includes('hola')) {
+            const welcomeText = `¡Hola, *${userName}*! 🤖 Bienvenido a *Nexus ERP*.\n\nPara ingresar como Administrador o identificar tu sesión, **envía tu correo electrónico registrado** por este chat, o selecciona una opción:`;
             
             const keyboard = {
                 inline_keyboard: [
                     [
-                        { text: "📦 Ver Planes y Precios", callback_data: "ver_planes" },
-                        { text: "💳 Pagar con Binance Pay", callback_data: "pagar_binance" }
+                        { text: "📦 Ver Planes", callback_data: "ver_planes" },
+                        { text: "💳 Pedir Código QR de Pago", callback_data: "enviar_qr" }
                     ],
                     [
-                        { text: "📡 Módulo ISPs y TV", callback_data: "ver_isps" },
-                        { text: "💬 Soporte 24/7", url: "https://t.me/cobro_deseo_privado_bot" }
+                        { text: "💬 Soporte", url: "https://t.me/cobro_deseo_privado_bot" }
                     ]
                 ]
             };
 
             sendTelegramMessage(chatId, welcomeText, keyboard);
+        } 
+        else if (textLower.startsWith('/cortesia')) {
+            // Comando para emitir licencias de regalo de forma directa
+            const beneficiary = textMessage.split(' ').slice(1).join(' ') || "Familiar / Amistad";
+            const courtesyKey = `VIP-CORTESIA-${Math.floor(100000 + Math.random() * 900000)}`;
+            
+            db.licenses[courtesyKey] = {
+                status: "ACTIVE",
+                tier: "Licencia Cortesía VIP Exclusiva",
+                expires: "2027-12-31",
+                company: beneficiary
+            };
+
+            sendTelegramMessage(chatId, `🎁 *¡Licencia de Cortesía Generada con Éxito!*\n\nAutorizado por: \`${db.adminSecretEmail}\`\nBeneficiario: *${beneficiary}*\nClave de Licencia: \`${courtesyKey}\``);
+        } 
+        else if (textLower.includes('qr') || textLower.includes('pagar') || textLower.includes('binance')) {
+            const qrImageUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80";
+            const caption = `💳 *Pasarela de Pago Automática (Binance Pay / USDT)*\n\nEscanea el código QR o transfiere al ID corporativo. Si eres administrador, escribe directamente tu correo \`${db.adminSecretEmail}\` para entrar al panel.`;
+            sendTelegramPhoto(chatId, qrImageUrl, caption);
+        } 
+        else {
+            sendTelegramMessage(chatId, `Comando recibido. Si eres administrador, recuerda escribir tu correo electrónico para abrir el panel de control.`);
+        }
+    } 
+    else if (update.callback_query) {
+        const chatId = update.callback_query.message.chat.id;
+        const data = update.callback_query.data;
+
+        if (data === "enviar_qr") {
+            const qrImageUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80";
+            sendTelegramPhoto(chatId, qrImageUrl, `💳 *Código QR de Pago (Binance Pay)*`);
+        } else if (data === "menu_cortesia") {
+            sendTelegramMessage(chatId, `🎁 *Módulo de Cortesías*\n\nPara regalar una licencia, escribe el comando:\n\`/cortesia [Nombre del Familiar]\``);
         } else {
-            sendTelegramMessage(chatId, `Recibido. Escribe /start para desplegar el menú de automatización y licencias.`);
+            sendTelegramMessage(chatId, `Operación procesada.`);
         }
     }
     
     res.sendStatus(200);
-});
-
-// Rutas de Inventario y Escaneo
-app.get('/api/inventory', (req, res) => {
-    res.json({ success: true, items: db.inventory });
-});
-
-app.post('/api/inventory/scan', (req, res) => {
-    const { code } = req.body;
-    const product = db.inventory.find(item => item.barcode === code);
-
-    if (product) {
-        res.json({ success: true, product });
-    } else {
-        res.status(404).json({ success: false, message: "Producto no encontrado en inventario." });
-    }
 });
 
 app.listen(PORT, () => {
