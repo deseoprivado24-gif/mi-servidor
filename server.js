@@ -1,64 +1,84 @@
-/**
- * ============================================================================
- * NEXUS ERP & POS - SERVIDOR OFICIAL PARA PRODUCCIÓN Y BOTS AUTÓNOMOS
- * ============================================================================
- */
-
 const express = require('express');
-const https = require('https');
-const path = require('path');
+const axios = require('axios');
+
 const app = express();
-const PORT = process.env.PORT || 3000;
-
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Sirve tu landing page / index.html estático
-app.use(express.static(__dirname));
+const PORT = process.env.PORT || 3000;
+const TELEGRAM_TOKEN = '8930061734:AAHya1EWKl5EuZXRAvTeynH0MpjmLuml-uI';
+const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
+const ADMIN_EMAIL = 'cambiostoday24@gmail.com';
 
+// Ruta principal para verificar que el servidor esté encendido
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.send('Servidor Nexus ERP & POS ejecutándose correctamente.');
 });
 
-// Base de datos lógica de licencias, usuarios e inventario
-const db = {
-    licensedCount: 0,
-    licenses: {
-        "NEXUS-CORP-2026-VIP": {
-            status: "ACTIVE",
-            tier: "Enterprise Tier ($120/mes)",
-            expires: "2027-03-30",
-            country: "VEN",
-            currency: "VES",
-            company: "Comercial Larry C.A."
+// Ruta del Webhook de Telegram
+app.post(`/webhook/${TELEGRAM_TOKEN}`, async (req, res) => {
+    try {
+        const { message } = req.body;
+
+        if (message && message.text) {
+            const chatId = message.chat.id;
+            const textMessage = message.text.trim().toLowerCase();
+
+            if (textMessage === ADMIN_EMAIL) {
+                const welcomeMessage = `🚀 *Bienvenido al Panel Nexus ERP & POS*\n\nAcceso concedido para: \`${ADMIN_EMAIL}\`\n\nSelecciona una opción del menú:`;
+                
+                const keyboard = {
+                    inline_keyboard: [
+                        [{ text: "🎁 Generar Cortesía", callback_data: "cmd_cortesia" }],
+                        [{ text: "📦 Ver Inventario", callback_data: "cmd_inventario" }],
+                        [{ text: "📱 Mostrar QR", callback_data: "cmd_qr" }]
+                    ]
+                };
+
+                await axios.post(`${TELEGRAM_API}/sendMessage`, {
+                    chat_id: chatId,
+                    text: welcomeMessage,
+                    parse_mode: 'Markdown',
+                    reply_markup: keyboard
+                });
+            } else {
+                await axios.post(`${TELEGRAM_API}/sendMessage`, {
+                    chat_id: chatId,
+                    text: '⚠️ Acceso no autorizado o comando no reconocido. Introduce el correo administrativo.'
+                });
+            }
         }
-    },
-    users: {},
-    inventory: [
-        { id: 1, barcode: "750123456789", name: "Producto Demo", price: 10.00, stock: 100 }
-    ],
-    countriesConfig: {
-        "VEN": { name: "Venezuela", currency: "VES", exchangeRates: ["Bolívares (VES)", "Dólar BCB", "Euro"] },
-        "MEX": { name: "México", currency: "MXN", exchangeRates: ["Peso Mexicano (MXN)"] },
-        "COL": { name: "Colombia", currency: "COP", exchangeRates: ["Peso Colombiano (COP)"] }
+    } catch (error) {
+        console.error('Error al procesar el mensaje del Webhook:', error.message);
     }
-};
 
-const WEBHOOK_SECRET_KEY = "nexus_secure_secret_enterprise_2026";
+    return res.sendStatus(200);
+});
 
-// Token oficial y actualizado del Bot de Telegram
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || '8930061734:AAHya1EWKl5EuZXRAvTeynH0MpjmLuml-uI';
-const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
+// Manejo de botones (Callback Queries)
+app.post(`/webhook/${TELEGRAM_TOKEN}/callback`, async (req, res) => {
+    try {
+        const { callback_query } = req.body;
+        if (callback_query) {
+            const chatId = callback_query.message.chat.id;
+            const data = callback_query.data;
 
-// Función auxiliar para enviar mensajes a Telegram
-function sendTelegramMessage(chatId, text, replyMarkup = null) {
-    const data = JSON.stringify({
-        chat_id: chatId,
-        text: text,
-        parse_mode: 'Markdown',
-        reply_markup: replyMarkup
-    });
+            let responseText = 'Opción procesada.';
+            if (data === 'cmd_cortesia') responseText = '✅ Función de Generar Cortesía seleccionada.';
+            if (data === 'cmd_inventario') responseText = '📦 Mostrando inventario actual...';
+            if (data === 'cmd_qr') responseText = '📱 Generando código QR de acceso...';
 
-    const url = new URL(`${TELEGRAM_API}/sendMessage`);
-    const options = {
+            await axios.post(`${TELEGRAM_API}/sendMessage`, {
+                chat_id: chatId,
+                text: responseText
+            });
+        }
+    } catch (error) {
+        console.error('Error en callback:', error.message);
+    }
+    return res.sendStatus(200);
+});
+
+app.listen(PORT, () => {
+    console.log(`Servidor escuchando en el puerto ${PORT}`);
+});
 
