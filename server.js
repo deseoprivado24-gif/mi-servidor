@@ -45,8 +45,8 @@ const db = {
 };
 
 const WEBHOOK_SECRET_KEY = "nexus_secure_secret_enterprise_2026";
-// Token exacto corregido
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || '8930061734:AAFZf_--kVQAWVOn-CjpUG6s6WkRj4Z5s0Y';
+// Token exacto emparejado con BotFather
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || '8930061734:AAEU-rFtpv3gdP7r5YsgE4ad8WqShrI4Mbc';
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 
 // Función auxiliar para enviar mensajes a Telegram
@@ -83,7 +83,7 @@ function sendTelegramMessage(chatId, text, replyMarkup = null) {
     req.end();
 }
 
-// Endpoint para verificar la tarifa promocional
+// Endpoint para verificar la tarifa promocional (Conectado con el frontend)
 app.get('/api/promo-price', (req, res) => {
     const isPromoActive = db.licensedCount < 100;
     const discountFactor = isPromoActive ? 0.5 : 1.0;
@@ -143,17 +143,16 @@ app.post('/api/webhook/payment', (req, res) => {
     });
 });
 
-// Webhook principal de Telegram (Mensajes y Botones con el token exacto)
+// Webhook principal de Telegram (Mensajes y Botones)
 app.post(`/webhook/${TELEGRAM_TOKEN}`, (req, res) => {
     const update = req.body;
 
-    // Manejo de clics en botones interactivos (Callback Queries)
     if (update.callback_query) {
         const chatId = update.callback_query.message.chat.id;
         const data = update.callback_query.data;
 
         if (data === 'ver_qr') {
-            sendTelegramMessage(chatId, `📱 *Código QR y Datos de Pago USDT (Binance Pay / P2P):*\\n\\n• *Binance ID / Correo:* cambiostoday24@gmail.com\\n• *Red:* TRC20 / BEP20\\n\\nRealiza tu pago y reporta tu comprobante para emitir tu licencia al instante.`);
+            sendTelegramMessage(chatId, `📱 *Código QR y Datos de Pago USDT (Binance Pay / P2P):*\n\n• *Binance ID / Correo:* cambiostoday24@gmail.com\n• *Red:* TRC20 / BEP20\n\nRealiza tu pago y reporta tu comprobante para emitir tu licencia al instante.`);
         } else if (data === 'cortesia') {
             db.licensedCount += 1;
             const newKey = `NEXUS-CORTESIA-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -165,23 +164,22 @@ app.post(`/webhook/${TELEGRAM_TOKEN}`, (req, res) => {
                 currency: "VES",
                 company: "Comercial Larry C.A."
             };
-            sendTelegramMessage(chatId, `✅ *¡Licencia de cortesía generada con éxito!*\\n\\n• *Clave:* \`${newKey}\`\\n• *Estado:* Activa hasta 2027.\\n• *Cupos usados:* ${db.licensedCount}/100.`);
+            sendTelegramMessage(chatId, `✅ *¡Licencia de cortesía generada con éxito!*\n\n• *Clave:* \`${newKey}\`\n• *Estado:* Activa hasta 2027.\n• *Cupos usados:* ${db.licensedCount}/100.`);
         } else if (data === 'ver_inventario') {
-            sendTelegramMessage(chatId, `📊 *Estado del Servidor y Licencias:*\\n• Licencias Activas: ${Object.keys(db.licenses).length}\\n• Cupos Promocionales: ${db.licensedCount}/100 utilizados.`);
+            sendTelegramMessage(chatId, `📊 *Estado del Servidor y Licencias:*\n• Licencias Activas: ${Object.keys(db.licenses).length}\n• Cupos Promocionales: ${db.licensedCount}/100 utilizados.`);
         } else if (data === 'ver_planes') {
-            sendTelegramMessage(chatId, `📦 *Planes Disponibles - Nexus ERP:*\\n• Básico ($15)\\n• Premium ($45)\\n• Enterprise ($120)\\n\\nPaga por Binance Pay al correo cambiostoday24@gmail.com y solicita tu activación.`);
+            sendTelegramMessage(chatId, `📦 *Planes Disponibles - Nexus ERP:*\n• Básico ($15)\n• Premium ($45)\n• Enterprise ($120)\n\nPaga por Binance Pay al correo cambiostoday24@gmail.com y solicita tu activación.`);
         }
         return res.sendStatus(200);
     }
 
-    // Manejo de mensajes de texto normales
     if (update.message && update.message.text) {
         const chatId = update.message.chat.id;
         const textMessage = update.message.text.trim();
         const userName = update.message.from.first_name || 'Emprendedor';
 
         if (textMessage === 'cambiostoday24@gmail.com') {
-            const adminText = `👑 *¡Bienvenido al Panel de Administración, Larry!*\\n\\nSistema *Nexus ERP & POS* sincronizado y operando con éxito en producción.\\n\\nSelecciona una opción de gestión:`;
+            const adminText = `👑 *¡Bienvenido al Panel de Administración, Larry!*\n\nSistema *Nexus ERP & POS* sincronizado y operando con éxito en producción.\n\nSelecciona una opción de gestión:`;
             
             const adminKeyboard = {
                 inline_keyboard: [
@@ -195,9 +193,9 @@ app.post(`/webhook/${TELEGRAM_TOKEN}`, (req, res) => {
                 ]
             };
             sendTelegramMessage(chatId, adminText, adminKeyboard);
-        } 
+        }
         else if (textMessage.toLowerCase().includes('/start') || textMessage.toLowerCase().includes('hola')) {
-            const welcomeText = `¡Hola, *${userName}*! 🤖 Bienvenido a *Nexus ERP*, el sistema autónomo impulsado por bots.\\n\\nEnvía tu correo registrado para acceder al panel de administración o selecciona una opción:`;
+            const welcomeText = `¡Hola, *${userName}*! 🤖 Bienvenido a *Nexus ERP*, el sistema autónomo impulsado por bots.\n\nEnvía tu correo registrado para acceder al panel de administración o selecciona una opción:`;
 
             const keyboard = {
                 inline_keyboard: [
