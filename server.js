@@ -7,19 +7,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 3000;
+// TOKEN EXACTO DE TU CAPTURA DE BOTFATHER:
 const TELEGRAM_TOKEN = '8930061734:AAEU-rFtpv3gdP7r5Ysge4ad8WqShrI4Mbc';
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 const ADMIN_EMAIL = 'cambiostoday24@gmail.com';
 
 let licensedCount = 15; 
 
-// Servir la página web corporativa (index.html)
+// Servir la página web
 app.use(express.static(__dirname));
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Endpoint de promociones para el index.html
+// Endpoint de promociones
 app.get('/api/promo-price', (req, res) => {
     res.json({
         success: true,
@@ -28,7 +29,7 @@ app.get('/api/promo-price', (req, res) => {
     });
 });
 
-// Función auxiliar para enviar mensajes a Telegram
+// Función para enviar mensajes
 async function sendMessage(chatId, text, replyMarkup = null) {
     try {
         const payload = { chat_id: chatId, text: text, parse_mode: 'Markdown' };
@@ -39,7 +40,7 @@ async function sendMessage(chatId, text, replyMarkup = null) {
     }
 }
 
-// Webhook principal de Telegram (Limpio y libre de publicidad externa)
+// Webhook de Telegram
 app.post(`/webhook/${TELEGRAM_TOKEN}`, async (req, res) => {
     try {
         const { message, callback_query } = req.body;
@@ -91,4 +92,3 @@ app.post(`/webhook/${TELEGRAM_TOKEN}`, async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor activo en puerto ${PORT}`);
 });
-
