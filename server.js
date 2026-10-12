@@ -14,7 +14,7 @@ const db = {
 const ADMIN_SECRET = "LarryAdmin2026";
 
 app.get('/', (req, res) => {
-  res.send('Servidor Nexus ERP Activo. Entra a /admin');
+  res.send('Servidor Nexus ERP Activo.');
 });
 
 app.get('/admin', (req, res) => {
@@ -42,19 +42,13 @@ app.get('/admin', (req, res) => {
 app.post('/api/admin/activar', (req, res) => {
   const { secret, licenseKey, clientName, daysValid } = req.body;
   if (secret !== ADMIN_SECRET) {
-    return res.status(403).send('<h1>Error: Clave de administrador incorrecta.</h1>');
+    return res.status(403).send('<h1 style="color:red; text-align:center; font-family:Arial;">Clave de administrador incorrecta.</h1>');
   }
   const expDate = new Date(Date.now() + (daysValid || 30) * 86400000).toISOString().split('T')[0];
   db.licenses[licenseKey] = { status: "ACTIVE", company: clientName, expires: expDate };
   res.send(`<h1 style="color:green; font-family:Arial; text-align:center; margin-top:50px;">¡Licencia ${licenseKey} activada con éxito hasta el ${expDate}!</h1><div style="text-align:center;"><a href="/admin">Volver al panel</a></div>`);
 });
 
-app.post('/api/verify-global', (req, res) => {
-  const { key } = req.body;
-  if (db.licenses[key] && db.licenses[key].status === "ACTIVE") {
-    return res.json({ success: true, message: "Licencia VÁLIDA." });
-  }
-  return res.json({ success: false, message: "Licencia no válida." });
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo exitosamente en el puerto ${PORT}`);
 });
-
-app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
