@@ -255,49 +255,6 @@
             background: linear-gradient(135deg, #2563eb, #1e40af);
         }
 
-        /* --- PANEL DE PRUEBA ACTIVA --- */
-        .trial-dashboard-box {
-            background: rgba(19, 28, 46, 0.95);
-            border: 2px dashed var(--accent-green);
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 650px;
-            margin: 0 auto 50px auto;
-            text-align: center;
-            display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .trial-dashboard-box h3 {
-            color: var(--accent-green);
-            font-size: 22px;
-            margin-bottom: 10px;
-        }
-
-        .countdown-timer {
-            font-size: 42px;
-            font-weight: 900;
-            color: #f59e0b;
-            margin: 15px 0;
-            font-family: monospace;
-            background: #080a10;
-            padding: 10px 20px;
-            border-radius: 8px;
-            display: inline-block;
-            border: 1px solid var(--border-color);
-        }
-
-        .trial-key-display {
-            font-size: 18px;
-            background: #111827;
-            padding: 8px 15px;
-            border-radius: 6px;
-            display: inline-block;
-            margin: 10px 0;
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-        }
-
         .hero-mockup {
             max-width: 900px;
             margin: 0 auto 60px auto;
@@ -708,18 +665,6 @@
         </div>
     </section>
 
-    <!-- PANEL DE PRUEBA ACTIVA CON RELOJ EN REVERSA -->
-    <div class="trial-dashboard-box" id="trialBox">
-        <h3 data-i18n="trial_active_title">🚀 ¡Tu Licencia de Prueba Está Activa!</h3>
-        <p style="color: var(--text-muted); font-size: 14px;" data-i18n="trial_active_desc">Prueba todas las funciones de Nexus ERP ahora mismo. Tu acceso expira en:</p>
-        <div class="countdown-timer" id="timerDisplay">25:00</div>
-        <div>
-            <span class="trial-key-display">Clave Temporal: <strong id="trialKeyText">GENERANDO...</strong></span>
-        </div>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: 10px;" data-i18n="trial_pay_note">¿Te convenció? Realiza tu pago por Binance Pay o Pago Móvil y escríbenos al WhatsApp para fijar tu cuenta de por vida.</p>
-        <a id="whatsappBtn" href="https://wa.me/584128910215?text=Hola,%20estoy%20probando%20el%20sistema%20con%20mi%20clave%20temporal%20y%20quiero%20hacer%20el%20pago" target="_blank" class="btn btn-primary" style="margin-top: 15px;">💬 Reportar Pago por WhatsApp</a>
-    </div>
-
     <!-- Mockup Visual -->
     <div class="hero-mockup">
         <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80" alt="Nexus ERP Dashboard Mockup">
@@ -865,67 +810,64 @@
         <p data-i18n="footer_text">&copy; 2026 Nexus ERP &bull; Deseo Privado. Todos los derechos reservados. Pagos directos vía Binance Pay y Pago Móvil.</p>
     </footer>
 
+    <!-- PANTALLA DE BLOQUEO CUANDO SE ACABAN LOS 25 MINUTOS -->
+    <div id="trialExpiredModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 15, 25, 0.95); z-index: 9999; justify-content: center; align-items: center; text-align: center; padding: 20px;">
+        <div style="background: var(--card-bg); border: 2px solid var(--danger-color); padding: 40px; border-radius: 16px; max-width: 500px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+            <div style="font-size: 50px; margin-bottom: 15px;">⏳</div>
+            <h2 style="color: var(--danger-color); font-size: 26px; margin-bottom: 15px;">¡Tiempo de Prueba Agotado!</h2>
+            <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 25px;">Tus 25 minutos de acceso gratuito a Nexus ERP han finalizado. Para continuar disfrutando del sistema sin interrupciones y fijar tu cuenta de por vida, realiza tu pago por Binance Pay o Pago Móvil.</p>
+            <a href="https://wa.me/584128910215?text=Hola,%20se%20agotó%20mi%20tiempo%20de%20prueba%20en%20Nexus%20ERP%20y%20quiero%20reportar%20mi%20pago" target="_blank" class="btn btn-primary" style="display: block; width: 100%; text-align: center; padding: 16px; font-size: 16px; background-color: var(--accent-green); color: #000; font-weight: bold; text-decoration: none; border-radius: 8px;">
+                💬 Reportar Pago por WhatsApp
+            </a>
+        </div>
+    </div>
+
     <!-- Script de Funcionalidad, Idiomas y Prueba Express -->
     <script>
-        // Consultar estado de la promoción al servidor de producción
         async function checkPromoStatus() {
             try {
                 const response = await fetch('/api/promo-price');
                 const data = await response.json();
-               
                 if (data.success && data.isPromoActive) {
                     const banner = document.getElementById('promoBanner');
                     if (banner) {
                         banner.innerText = `🔥 PROMOCIÓN ESPECIAL: 50% DE DESCUENTO EN LICENCIA (Quedan ${100 - data.licensedCount} cupos disponibles)`;
                     }
-                } else {
-                    const banner = document.getElementById('promoBanner');
-                    if (banner) banner.style.display = 'none';
                 }
             } catch (err) {
                 console.log("Servidor en ejecución autónoma.");
             }
         }
 
-        // Lógica de la Prueba Express de 25 Minutos
+        // Lógica de la Prueba Express de 25 Minutos (Redirección directa)
         function iniciarPruebaExpress() {
-            const trialBox = document.getElementById('trialBox');
-            const timerDisplay = document.getElementById('timerDisplay');
-            const trialKeyText = document.getElementById('trialKeyText');
-            const whatsappBtn = document.getElementById('whatsappBtn');
-
             const randomKey = "TRIAL-" + Math.floor(1000 + Math.random() * 9000) + "-VE";
-            trialKeyText.innerText = randomKey;
+            
+            // Guardar en el navegador la expiración (25 minutos)
+            localStorage.setItem('nexus_trial_key', randomKey);
+            localStorage.setItem('nexus_trial_expires', Date.now() + 25 * 60 * 1000);
 
-            whatsappBtn.href = `https://wa.me/584128910215?text=Hola,%20estoy%20probando%20el%20sistema%20con%20mi%20clave%20temporal%20${randomKey}%20y%20quiero%20hacer%20el%20pago`;
+            alert(`🚀 ¡Clave generada: ${randomKey}!\nEntrando al ERP por 25 minutos...`);
+            
+            // Redirige directo al sistema ERP
+            window.location.href = "/app";
+        }
 
-            trialBox.style.display = 'block';
-            trialBox.scrollIntoView({ behavior: 'smooth' });
+        // Vigilante del tiempo de prueba
+        function verificarTiempoPrueba() {
+            const expirationTime = localStorage.getItem('nexus_trial_expires');
+            if (!expirationTime) return;
 
-            let tiempoRestante = 1500;
-            if (window.trialInterval) clearInterval(window.trialInterval);
-
-            window.trialInterval = setInterval(() => {
-                let minutos = Math.floor(tiempoRestante / 60);
-                let segundos = tiempoRestante % 60;
-
-                minutos = minutos < 10 ? '0' + minutos : minutos;
-                segundos = segundos < 10 ? '0' + segundos : segundos;
-
-                timerDisplay.innerText = `${minutos}:${segundos}`;
-
-                if (tiempoRestante <= 0) {
-                    clearInterval(window.trialInterval);
-                    timerDisplay.innerText = "00:00";
-                    timerDisplay.style.color = "#ef4444";
-                    alert("⚠️ Tu tiempo de prueba de 25 minutos ha expirado. Reporta tu pago para mantener la licencia activa.");
+            const intervalo = setInterval(() => {
+                if (Date.now() >= expirationTime) {
+                    clearInterval(intervalo);
+                    localStorage.removeItem('nexus_trial_expires');
+                    const modal = document.getElementById('trialExpiredModal');
+                    if (modal) modal.style.display = 'flex';
                 }
-
-                tiempoRestante--;
             }, 1000);
         }
 
-        // Diccionario de Traducciones Multi-idioma con precios limpios y sin Telegram
         const translations = {
             es: {
                 page_title: "Nexus ERP - El ERP Autónomo impulsado por Bots",
@@ -956,101 +898,24 @@
                 contact_sub: "Atención rápida a través de nuestro equipo de soporte corporativo.",
                 social_title: "Síguenos en nuestras comunidades y redes",
                 float_support: "💬 Soporte 24/7",
-                footer_text: "© 2026 Nexus ERP • Deseo Privado. Todos los derechos reservados. Pagos directos vía Binance Pay y Pago Móvil.",
-                trial_active_title: "🚀 ¡Tu Licencia de Prueba Está Activa!",
-                trial_active_desc: "Prueba todas las funciones de Nexus ERP ahora mismo. Tu acceso expira en:",
-                trial_pay_note: "¿Te convenció? Realiza tu pago por Binance Pay o Pago Móvil y escríbenos al WhatsApp para fijar tu cuenta de por vida."
-            },
-            en: {
-                page_title: "Nexus ERP - Autonomous ERP",
-                nav_features: "Features", nav_about: "About Us", nav_pricing: "Pricing", nav_isps: "ISPs & TV", nav_contact: "Contact",
-                m1: "🚀 Total Automation", m2: "🤖 24/7 Bot Ecosystem", m3: "💬 Billing & Cut Automation", m4: "💰 Binance Pay", m5: "📊 Financial & Tax Control", m6: "☁️ Secure Cloud", m7: "📡 Specialized ISPs & TV Module",
-                hero_title: "Your business on <span>autopilot</span>, with zero administrative friction.",
-                hero_desc: "The autonomous ERP managed by smart bots. Select your country, pay with Binance or test the system free for 25 minutes immediately.",
-                btn_buy: "Get License", btn_more: "Learn More", btn_whatsapp: "Get via WhatsApp",
-                feat_title: "Integrated Autonomous Ecosystem",
-                f1_title: "24/7 Operation Bots", f1_desc: "Automated fiscal accounting management adapted to your country's laws, warehouse control, and real-time inventory replenishment.",
-                f2_title: "Universal Loss Control", f2_desc: "Cross-cutting tracking of shrinkage, cash differences, waste, and hidden costs to secure business profitability from day one.",
-                f3_title: "Integrated Digital KOT", f3_desc: "Flexible option ideal for fast-food outlets, instantly connecting order intake with the kitchen and automatically deducting supplies.",
-                about_title: "Who We Are",
-                mission_title: "Our Mission", mission_desc: "Democratize high-level enterprise technology, empowering entrepreneurs and corporations with sophisticated yet simple and autonomous automation tools.",
-                vision_title: "Our Vision", vision_desc: "Become the leading intelligent ERP ecosystem in commercial and administrative agility, eliminating geographical and operational barriers across the region.",
-                pricing_title: "Plans & Licenses",
-                p1_name: "Basic Plan", p1_desc: "Ideal for startups and local shops.",
-                p1_f1: "Basic accounting", p1_f2: "Simple inventory control", p1_f3: "Basic loss control", p1_f4: "Fast food order module option", p1_f5: "Automatic suspension for non-payment",
-                p2_name: "Premium Plan", p2_desc: "For expanding businesses and higher volume.",
-                p2_f1: "Advanced accounting with tax compliance", p2_f2: "Warehouse with auto-replenishment", p2_f3: "Analytical loss control & audit", p2_f4: "Multiple users with permissions", p2_f5: "Automatic suspension for non-payment",
-                p3_name: "Platinum Plan", p3_desc: "Macro-operations, corporations and industry.",
-                p3_f1: "Complete autonomous bot ecosystem", p3_f2: "Macro production control", p3_f3: "Advanced logistics & dispatch routes", p3_f4: "Chain-wide macro loss control", p3_f5: "Automatic suspension for non-payment",
-                per_month: "/ mo",
-                isp_title: "Advanced Solution for ISPs & Subscription TV", isp_subtitle: "Billing Automation & Service Cuts",
-                isp_desc: "If your company provides internet or subscription TV, Nexus ERP manages subscriber registries, sends expiration alerts, executes automatic service suspension upon non-payment, and instantly restores it upon payment.",
-                isp_btn: "Inquire Integration",
-                contact_title: "Official Contact", contact_desc: "Have questions, need advanced tech support or a custom corporate quote? Write to us directly:",
-                contact_sub: "Fast assistance through our corporate support team.",
-                social_title: "Follow us on our communities and networks",
-                float_support: "💬 24/7 Support",
-                footer_text: "© 2026 Nexus ERP • Deseo Privado. All rights reserved. Direct payments via Binance Pay and Mobile Payment.",
-                trial_active_title: "🚀 Your Trial License Is Active!",
-                trial_active_desc: "Test all Nexus ERP features right now. Your access expires in:",
-                trial_pay_note: "Convinced? Make your payment via Binance Pay or Mobile Payment and write to us on WhatsApp to lock in your account."
-            },
-            zh: {
-                page_title: "Nexus ERP - 自主企业资源计划系统",
-                nav_features: "功能特性", nav_about: "关于我们", nav_pricing: "价格许可", nav_isps: "ISP与电视", nav_contact: "联系我们",
-                m1: "🚀 全面自动化", m2: "🤖 7x24小时机器人生态系统", m3: "💬 计费与切断自动化", m4: "💰 币安支付(Binance Pay)", m5: "📊 财务与税务控制", m6: "☁️ 安全云端", m7: "📡 ISP与电视专业模块",
-                hero_title: "让您的企业实现<span>自动驾驶</span>，零行政摩擦。",
-                hero_desc: "由智能机器人管理的自主ERP。选择国家，使用币安付款或立即免费试用25分钟。",
-                btn_buy: "购买许可", btn_more: "了解更多", btn_whatsapp: "通过WhatsApp购买",
-                feat_title: "集成自主生态系统",
-                f1_title: "7x24小时运营机器人", f1_desc: "适应您所在国家法律的自动化财务会计管理、仓库控制和实时库存补货。",
-                f2_title: "全方位损失控制", f2_desc: "跨业务追踪损耗、现金差异、浪费和隐藏成本，确保从第一天起就保障盈利能力。",
-                f3_title: "集成数字点餐系统", f3_desc: "快餐店的理想选择，瞬间将订单接收与厨房连接，并自动扣减库存物资。",
-                about_title: "关于我们",
-                mission_title: "我们的使命", mission_desc: "使高级企业技术民主化，为企业和机构提供复杂但极其简单且自主的自动化工具。",
-                vision_title: "我们的愿景", vision_desc: "成为商业和行政灵活性领域领先的智能ERP生态系统，消除整个地区的地理和运营障碍。",
-                pricing_title: "方案与许可",
-                p1_name: "基础方案", p1_desc: "非常适合初创企业和本地商户。",
-                p1_f1: "基础会计", p1_f2: "简单库存控制", p1_f3: "基础损失控制", p1_f4: "快餐点餐模块选项", p1_f5: "欠费自动暂停",
-                p2_name: "高级方案", p2_desc: "适用于扩展中的企业和更大业务量。",
-                p2_f1: "具备税务合规的高级会计", p2_f2: "自动补货仓库", p2_f3: "分析性损失控制与审计", p2_f4: "多用户权限管理", p2_f5: "欠费自动暂停",
-                p3_name: "白金方案", p3_desc: "宏观运营、跨国公司和工业。",
-                p3_f1: "完整的自主机器人生态系统", p3_f2: "宏观生产控制", p3_f3: "高级物流与派送路线", p3_f4: "全链条宏观损失控制", p3_f5: "欠费自动暂停",
-                per_month: "/ 月",
-                isp_title: "ISP及订阅电视的高级解决方案", isp_subtitle: "账单自动化与服务切断",
-                isp_desc: "如果您提供互联网或电视订阅服务，Nexus ERP可管理用户档案、发送到期提醒、在未付款时自动切断服务，并在客户缴费后瞬间恢复。",
-                isp_btn: "咨询集成",
-                contact_title: "官方联系方式", contact_desc: "有疑问、需要高级技术支持或定制企业报价？请直接给我们写信：",
-                contact_sub: "通过我们的企业支持团队提供快速协助。",
-                social_title: "关注我们的社群与社交网络",
-                float_support: "💬 24/7 客服支持",
-                footer_text: "© 2026 Nexus ERP • Deseo Privado. 版权所有。通过 Binance Pay 和移动支付直接付款。",
-                trial_active_title: "🚀 您的试用许可证已激活！",
-                trial_active_desc: "立即测试 Nexus ERP 的所有功能。您的访问权限将在此之后过期：",
-                trial_pay_note: "满意吗？通过 Binance Pay 或移动支付付款，并给我们发 WhatsApp 以永久锁定您的账户。"
+                footer_text: "© 2026 Nexus ERP • Deseo Privado. Todos los derechos reservados. Pagos directos vía Binance Pay y Pago Móvil."
             }
         };
 
-        // Rellenar idiomas restantes con inglés por defecto
-        ['pt', 'fr', 'de', 'it', 'ja', 'ar', 'ru'].forEach(lang => {
-            translations[lang] = translations.en;
+        ['en', 'pt', 'fr', 'de', 'it', 'zh', 'ja', 'ar', 'ru'].forEach(lang => {
+            translations[lang] = translations.es;
         });
 
         function cambiarIdioma() {
             const lang = document.getElementById('langSelector').value;
             const t = translations[lang] || translations.es;
-
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
-                if (t[key]) {
-                    el.innerHTML = t[key];
-                }
+                if (t[key]) el.innerHTML = t[key];
             });
-            // Refrescar precios al cambiar de idioma para que mantengan la moneda correcta
             cambiarPais();
         }
 
-        // Lógica limpia y directa de cambio de país y monedas con el 50% de descuento ($7.50, $22.50, $60.00 base)
         function cambiarPais() {
             const selector = document.getElementById('countrySelector');
             const pais = selector.value;
@@ -1078,36 +943,21 @@
                 py: { p1: '₲57,500', p2: '₲172,500', p3: '₲460,000', mon: '₲' },
                 uy: { p1: '$310', p2: '$930', p3: '$2,480', mon: 'UYU' },
                 ve: { p1: 'Bs. 285', p2: 'Bs. 855', p3: 'Bs. 2,280', mon: 'Bs.' },
-                us: { p1: '$7.50', p2: '$22.50', p3: '$60', mon: 'USD' },
-                ca: { p1: '$7.50', p2: '$22.50', p3: '$60', mon: 'USD' },
-                cn: { p1: '$7.50', p2: '$22.50', p3: '$60', mon: 'USD' },
-                jp: { p1: '$7.50', p2: '$22.50', p3: '$60', mon: 'USD' },
-                asia_other: { p1: '$7.50', p2: '$22.50', p3: '$60', mon: 'USD' },
-                oceania: { p1: '$7.50', p2: '$22.50', p3: '$60', mon: 'USD' },
-                africa: { p1: '$7.50', p2: '$22.50', p3: '$60', mon: 'USD' },
                 global_usd: { p1: '$7.50', p2: '$22.50', p3: '$60', mon: 'USD' }
             };
 
-            const lang = document.getElementById('langSelector').value;
-            const perMonthText = (lang === 'zh') ? '/ 月' : (lang === 'en' ? '/ mo' : '/ mes');
-
-            if (precios[pais]) {
-                const p = precios[pais];
-                p1.innerHTML = `${p.p1} <span>${p.mon} ${perMonthText}</span>`;
-                p2.innerHTML = `${p.p2} <span>${p.mon} ${perMonthText}</span>`;
-                p3.innerHTML = `${p.p3} <span>${p.mon} ${perMonthText}</span>`;
-            } else {
-                p1.innerHTML = `$7.50 <span>USD ${perMonthText}</span>`;
-                p2.innerHTML = `$22.50 <span>USD ${perMonthText}</span>`;
-                p3.innerHTML = `$60.00 <span>USD ${perMonthText}</span>`;
-            }
+            const p = precios[pais] || precios.global_usd;
+            p1.innerHTML = `${p.p1} <span>${p.mon} / mes</span>`;
+            p2.innerHTML = `${p.p2} <span>${p.mon} / mes</span>`;
+            p3.innerHTML = `${p.p3} <span>${p.mon} / mes</span>`;
         }
 
-        // Ejecutar al cargar la página
         window.onload = function() {
             checkPromoStatus();
             cambiarPais();
+            verificarTiempoPrueba();
         };
     </script>
 </body>
 </html>
+
