@@ -13,6 +13,7 @@
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
             --border-color: #1f293d;
+            --danger-color: #ef4444;
         }
 
         * {
@@ -206,7 +207,8 @@
             display: flex;
             justify-content: center;
             gap: 15px;
-            margin-bottom: 50px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -217,6 +219,9 @@
             cursor: pointer;
             text-decoration: none;
             transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-primary {
@@ -237,6 +242,60 @@
 
         .btn-secondary:hover {
             border-color: var(--accent-green);
+        }
+
+        .btn-trial {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+            border: none;
+        }
+
+        .btn-trial:hover {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+        }
+
+        /* --- PANEL DE PRUEBA ACTIVA --- */
+        .trial-dashboard-box {
+            background: rgba(19, 28, 46, 0.95);
+            border: 2px dashed var(--accent-green);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 650px;
+            margin: 0 auto 50px auto;
+            text-align: center;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .trial-dashboard-box h3 {
+            color: var(--accent-green);
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .countdown-timer {
+            font-size: 42px;
+            font-weight: 900;
+            color: #f59e0b;
+            margin: 15px 0;
+            font-family: monospace;
+            background: #080a10;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            border: 1px solid var(--border-color);
+        }
+
+        .trial-key-display {
+            font-size: 18px;
+            background: #111827;
+            padding: 8px 15px;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 10px 0;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
         }
 
         .hero-mockup {
@@ -531,7 +590,7 @@
 </head>
 <body>
 
-    <!-- Banner de Promoción 50% Descuento (Conectado con el servidor) -->
+    <!-- Banner de Promoción 50% Descuento -->
     <div class="promo-banner" id="promoBanner">
         🔥 PROMOCIÓN ESPECIAL: 50% DE DESCUENTO EN LICENCIAS PARA LOS PRIMEROS 100 USUARIOS
     </div>
@@ -544,7 +603,7 @@
         </div>
        
         <div class="header-controls">
-            <!-- Selector 1: País de Ubicación Fiscal y Licencia -->
+            <!-- Selector de País -->
             <select class="selector-box" id="countrySelector" onchange="cambiarPais()" title="País de ubicación fiscal">
                 <optgroup label="🌐 Global / Internacional">
                     <option value="global_usd" selected>🌐 Global (USD / Standard)</option>
@@ -592,7 +651,7 @@
                 </optgroup>
             </select>
 
-            <!-- Selector 2: Idioma de la Interfaz -->
+            <!-- Selector de Idioma -->
             <select class="selector-box" id="langSelector" onchange="cambiarIdioma()">
                 <option value="es" selected>🇪🇸 Español</option>
                 <option value="en">🇬🇧 English</option>
@@ -621,31 +680,45 @@
         <div class="marquee-content">
             <span class="marquee-item" data-i18n="m1">🚀 Automatización Total</span>
             <span class="marquee-item" data-i18n="m2">🤖 Ecosistema de Bots 24/7</span>
-            <span class="marquee-item" data-i18n="m3">💬 Integración con Telegram</span>
+            <span class="marquee-item" data-i18n="m3">💬 Gestión de Cobros y Cortes</span>
             <span class="marquee-item" data-i18n="m4">💰 Pagos con Binance Pay</span>
             <span class="marquee-item" data-i18n="m5">📊 Control Financiero y Fiscal</span>
             <span class="marquee-item" data-i18n="m6">☁️ Nube Segura</span>
-            <span class="marquee-item" data-i18n="m7">📡 Módulo Especializado ISPs</span>
-            <!-- Duplicado para efecto loop infinito -->
+            <span class="marquee-item" data-i18n="m7">📡 Módulo Especializado ISPs y TV</span>
+            <!-- Duplicado loop -->
             <span class="marquee-item" data-i18n="m1">🚀 Automatización Total</span>
             <span class="marquee-item" data-i18n="m2">🤖 Ecosistema de Bots 24/7</span>
-            <span class="marquee-item" data-i18n="m3">💬 Integración con Telegram</span>
+            <span class="marquee-item" data-i18n="m3">💬 Gestión de Cobros y Cortes</span>
             <span class="marquee-item" data-i18n="m4">💰 Pagos con Binance Pay</span>
             <span class="marquee-item" data-i18n="m5">📊 Control Financiero y Fiscal</span>
             <span class="marquee-item" data-i18n="m6">☁️ Nube Segura</span>
-            <span class="marquee-item" data-i18n="m7">📡 Módulo Especializado ISPs</span>
+            <span class="marquee-item" data-i18n="m7">📡 Módulo Especializado ISPs y TV</span>
         </div>
     </div>
 
     <!-- Hero Section -->
     <section class="hero">
         <h1 data-i18n="hero_title">Tu empresa en <span>piloto automático</span>, sin fricción administrativa.</h1>
-        <p data-i18n="hero_desc">El ERP autónomo gestionado por bots inteligentes. Compra tu licencia vía Telegram, paga con Binance, selecciona tu país y deja que el sistema configure tu contabilidad, inventarios y cortes automáticos.</p>
+        <p data-i18n="hero_desc">El ERP autónomo gestionado por bots inteligentes. Selecciona tu país, realiza tu pago con Binance o prueba el sistema gratis por 25 minutos de inmediato.</p>
+        
         <div class="cta-buttons">
+            <button onclick="iniciarPruebaExpress()" class="btn btn-trial">⚡ Activar Prueba Inmediata (25 Min)</button>
             <a href="#precios" class="btn btn-primary" data-i18n="btn_buy">Comprar Licencia</a>
             <a href="#caracteristicas" class="btn btn-secondary" data-i18n="btn_more">Conocer Más</a>
         </div>
     </section>
+
+    <!-- PANEL DE PRUEBA ACTIVA CON RELOJ EN REVERSA -->
+    <div class="trial-dashboard-box" id="trialBox">
+        <h3 data-i18n="trial_active_title">🚀 ¡Tu Licencia de Prueba Está Activa!</h3>
+        <p style="color: var(--text-muted); font-size: 14px;" data-i18n="trial_active_desc">Prueba todas las funciones de Nexus ERP ahora mismo. Tu acceso expira en:</p>
+        <div class="countdown-timer" id="timerDisplay">25:00</div>
+        <div>
+            <span class="trial-key-display">Clave Temporal: <strong id="trialKeyText">GENERANDO...</strong></span>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 10px;" data-i18n="trial_pay_note">¿Te convenció? Realiza tu pago por Binance Pay o Pago Móvil y escríbenos al WhatsApp para fijar tu cuenta de por vida.</p>
+        <a id="whatsappBtn" href="https://wa.me/584128910215?text=Hola,%20estoy%20probando%20el%20sistema%20con%20mi%20clave%20temporal%20y%20quiero%20hacer%20el%20pago" target="_blank" class="btn btn-primary" style="margin-top: 15px;">💬 Reportar Pago por WhatsApp</a>
+    </div>
 
     <!-- Mockup Visual -->
     <div class="hero-mockup">
@@ -686,7 +759,7 @@
             <div class="card">
                 <div class="card-icon">👁️‍🗨</div>
                 <h3 data-i18n="vision_title">Nuestra Visión</h3>
-                <p data-i18n="vision_desc">Convertirnos en el ecosistema ERP inteligente líder en agilidad comercial y administrativa, eliminando las barreras geográficas y operativas en toda la región mediante la integración de Telegram y Binance.</p>
+                <p data-i18n="vision_desc">Convertirnos en el ecosistema ERP inteligente líder en agilidad comercial y administrativa, eliminando las barreras geográficas y operativas en toda la región.</p>
             </div>
         </div>
     </section>
@@ -709,7 +782,7 @@
                         <li data-i18n="p1_f5">Suspensión automática por impago</li>
                     </ul>
                 </div>
-                <a href="https://t.me/cobro_deseo_privado_bot" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_telegram">Adquirir vía Telegram</a>
+                <a href="https://wa.me/584128910215?text=Hola,%20quiero%20adquirir%20el%20Plan%20Básico" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_buy_direct">Adquirir Licencia</a>
             </div>
 
             <!-- Plan Premium -->
@@ -726,7 +799,7 @@
                         <li data-i18n="p2_f5">Suspensión automática por impago</li>
                     </ul>
                 </div>
-                <a href="https://t.me/cobro_deseo_privado_bot" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_telegram">Adquirir vía Telegram</a>
+                <a href="https://wa.me/584128910215?text=Hola,%20quiero%20adquirir%20el%20Plan%20Premium" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_buy_direct">Adquirir Licencia</a>
             </div>
 
             <!-- Plan Platinum -->
@@ -743,7 +816,7 @@
                         <li data-i18n="p3_f5">Suspensión automática por impago</li>
                     </ul>
                 </div>
-                <a href="https://t.me/cobro_deseo_privado_bot" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_telegram">Adquirir vía Telegram</a>
+                <a href="https://wa.me/584128910215?text=Hola,%20quiero%20adquirir%20el%20Plan%20Platinum" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_buy_direct">Adquirir Licencia</a>
             </div>
         </div>
     </section>
@@ -755,11 +828,11 @@
             <div class="card-icon">📡</div>
             <h3 data-i18n="isp_subtitle">Automatización de Cobros y Cortes de Servicio</h3>
             <p style="margin-top: 15px; margin-bottom: 20px;" data-i18n="isp_desc">Si tu empresa provee internet o televisión por suscripción, Nexus ERP gestiona el padrón de abonados, envía alertas de vencimiento, ejecuta la suspensión y corte automático del servicio ante impagos, y lo restaura al instante apenas el cliente cancela su cuota.</p>
-            <a href="https://t.me/cobro_deseo_privado_bot" target="_blank" class="btn btn-secondary" data-i18n="isp_btn">Consultar Integración</a>
+            <a href="https://wa.me/584128910215?text=Hola,%20quiero%20consultar%20la%20integración%20para%20ISPs%20y%20TV" target="_blank" class="btn btn-secondary" data-i18n="isp_btn">Consultar Integración</a>
         </div>
     </section>
 
-    <!-- Sección de Contacto con Correo Electrónico y Teléfono -->
+    <!-- Sección de Contacto -->
     <section id="contacto">
         <div class="contact-section">
             <h3 data-i18n="contact_title">Contacto Oficial</h3>
@@ -783,16 +856,16 @@
     </section>
 
     <!-- Botón Flotante de Atención al Cliente / Soporte -->
-    <a href="https://t.me/cobro_deseo_privado_bot" target="_blank" class="floating-support" title="Soporte y Atención al Cliente" data-i18n="float_support">
+    <a href="https://wa.me/584128910215?text=Hola,%20necesito%20soporte%20con%20Nexus%20ERP" target="_blank" class="floating-support" title="Soporte y Atención al Cliente" data-i18n="float_support">
         💬 Soporte 24/7
     </a>
 
     <!-- Footer -->
     <footer>
-        <p data-i18n="footer_text">&copy; 2026 Nexus ERP &bull; Deseo Privado. Todos los derechos reservados. Operaciones respaldadas por Telegram y Binance.</p>
+        <p data-i18n="footer_text">&copy; 2026 Nexus ERP &bull; Deseo Privado. Todos los derechos reservados. Pagos directos vía Binance Pay y Pago Móvil.</p>
     </footer>
 
-    <!-- Script de Traducción, Monedas y Promoción -->
+    <!-- Script de Funcionalidad, Idiomas y Prueba Express -->
     <script>
         // Consultar estado de la promoción al servidor de producción
         async function checkPromoStatus() {
@@ -814,22 +887,65 @@
             }
         }
 
+        // Lógica de la Prueba Express de 25 Minutos
+        function iniciarPruebaExpress() {
+            const trialBox = document.getElementById('trialBox');
+            const timerDisplay = document.getElementById('timerDisplay');
+            const trialKeyText = document.getElementById('trialKeyText');
+            const whatsappBtn = document.getElementById('whatsappBtn');
+
+            // Generar clave temporal aleatoria
+            const randomKey = "TRIAL-" + Math.floor(1000 + Math.random() * 9000) + "-VE";
+            trialKeyText.innerText = randomKey;
+
+            // Actualizar enlace de WhatsApp con la clave generada
+            whatsappBtn.href = `https://wa.me/584128910215?text=Hola,%20estoy%20probando%20el%20sistema%20con%20mi%20clave%20temporal%20${randomKey}%20y%20quiero%20hacer%20el%20pago`;
+
+            // Mostrar el panel de prueba
+            trialBox.style.display = 'block';
+            trialBox.scrollIntoView({ behavior: 'smooth' });
+
+            // Configurar tiempo en segundos (25 minutos = 1500 segundos)
+            let tiempoRestante = 1500;
+
+            if (window.trialInterval) clearInterval(window.trialInterval);
+
+            window.trialInterval = setInterval(() => {
+                let minutos = Math.floor(tiempoRestante / 60);
+                let segundos = tiempoRestante % 60;
+
+                minutos = minutos < 10 ? '0' + minutos : minutos;
+                segundos = segundos < 10 ? '0' + segundos : segundos;
+
+                timerDisplay.innerText = `${minutos}:${segundos}`;
+
+                if (tiempoRestante <= 0) {
+                    clearInterval(window.trialInterval);
+                    timerDisplay.innerText = "00:00";
+                    timerDisplay.style.color = "#ef4444";
+                    alert("⚠️ Tu tiempo de prueba de 25 minutos ha expirado. Reporta tu pago para mantener la licencia activa.");
+                }
+
+                tiempoRestante--;
+            }, 1000);
+        }
+
         // Diccionario de Traducciones Multi-idioma
         const translations = {
             es: {
                 page_title: "Nexus ERP - El ERP Autónomo impulsado por Bots",
                 nav_features: "Características", nav_about: "Nosotros", nav_pricing: "Licencias", nav_isps: "ISPs y TV", nav_contact: "Contacto",
-                m1: "🚀 Automatización Total", m2: "🤖 Ecosistema de Bots 24/7", m3: "💬 Integración con Telegram", m4: "💰 Pagos con Binance Pay", m5: "📊 Control Financiero y Fiscal", m6: "☁️ Nube Segura", m7: "📡 Módulo Especializado ISPs",
+                m1: "🚀 Automatización Total", m2: "🤖 Ecosistema de Bots 24/7", m3: "💬 Gestión de Cobros y Cortes", m4: "💰 Pagos con Binance Pay", m5: "📊 Control Financiero y Fiscal", m6: "☁️ Nube Segura", m7: "📡 Módulo Especializado ISPs y TV",
                 hero_title: "Tu empresa en <span>piloto automático</span>, sin fricción administrativa.",
-                hero_desc: "El ERP autónomo gestionado por bots inteligentes. Compra tu licencia vía Telegram, paga con Binance, selecciona tu país y deja que el sistema configure tu contabilidad, inventarios y cortes automáticos.",
-                btn_buy: "Comprar Licencia", btn_more: "Conocer Más",
+                hero_desc: "El ERP autónomo gestionado por bots inteligentes. Selecciona tu país, realiza tu pago con Binance o prueba el sistema gratis por 25 minutos de inmediato.",
+                btn_buy: "Comprar Licencia", btn_more: "Conocer Más", btn_buy_direct: "Adquirir Licencia",
                 feat_title: "Ecosistema Autónomo Integrado",
                 f1_title: "Bots de Operación 24/7", f1_desc: "Gestión automatizada de contabilidad fiscal adaptada a las leyes de tu país, control de almacén y reposición de inventario en tiempo real.",
                 f2_title: "Control Universal de Pérdidas", f2_desc: "Rastreo transversal de mermas, diferencias en caja, desperdicios y costos ocultos para blindar la rentabilidad de tu negocio desde el día uno.",
                 f3_title: "Comanda Digital Integrada", f3_desc: "Opción flexible ideal para locales de comida rápida, conectando al instante la toma de pedidos con la cocina y descargando insumos automáticamente.",
                 about_title: "Quiénes Somos",
                 mission_title: "Nuestra Misión", mission_desc: "Democratizar la tecnología empresarial de alto nivel, entregando a emprendedores y corporaciones herramientas de automatización sofisticadas pero de uso sumamente sencillo y autónomo.",
-                vision_title: "Nuestra Visión", vision_desc: "Convertirnos en el ecosistema ERP inteligente líder en agilidad comercial y administrativa, eliminando las barreras geográficas y operativas en toda la región mediante la integración de Telegram y Binance.",
+                vision_title: "Nuestra Visión", vision_desc: "Convertirnos en el ecosistema ERP inteligente líder en agilidad comercial y administrativa, eliminando las barreras geográficas y operativas en toda la región.",
                 pricing_title: "Planes y Licencias",
                 p1_name: "Plan Básico", p1_desc: "Ideal para emprendimientos y comercios locales.",
                 p1_f1: "Contabilidad básica", p1_f2: "Control de inventario sencillo", p1_f3: "Control básico de pérdidas", p1_f4: "Opción de módulo de comanda (Comida Rápida)", p1_f5: "Suspensión automática por impago",
@@ -837,7 +953,7 @@
                 p2_f1: "Contabilidad avanzada con cumplimiento fiscal", p2_f2: "Almacén con reposición automática", p2_f3: "Control analítico de pérdidas y auditoría", p2_f4: "Múltiples usuarios con permisos", p2_f5: "Suspensión automática por impago",
                 p3_name: "Plan Platinum", p3_desc: "Macro-operación, corporaciones e industria.",
                 p3_f1: "Ecosistema completo de bots autónomos", p3_f2: "Control de producción macro", p3_f3: "Logística avanzada y rutas de despacho", p3_f4: "Control macro de pérdidas en cadena", p3_f5: "Suspensión automática por impago",
-                per_month: "/ mes", btn_telegram: "Adquirir vía Telegram",
+                per_month: "/ mes",
                 isp_title: "Solución Avanzada para ISPs y TV por Suscripción", isp_subtitle: "Automatización de Cobros y Cortes de Servicio",
                 isp_desc: "Si tu empresa provee internet o televisión por suscripción, Nexus ERP gestiona el padrón de abonados, envía alertas de vencimiento, ejecuta la suspensión y corte automático del servicio ante impagos, y lo restaura al instante apenas el cliente cancela su cuota.",
                 isp_btn: "Consultar Integración",
@@ -845,22 +961,25 @@
                 contact_sub: "Atención rápida a través de nuestro equipo de soporte corporativo.",
                 social_title: "Síguenos en nuestras comunidades y redes",
                 float_support: "💬 Soporte 24/7",
-                footer_text: "© 2026 Nexus ERP • Deseo Privado. Todos los derechos reservados. Operaciones respaldadas por Telegram y Binance."
+                footer_text: "© 2026 Nexus ERP • Deseo Privado. Todos los derechos reservados. Pagos directos vía Binance Pay y Pago Móvil.",
+                trial_active_title: "🚀 ¡Tu Licencia de Prueba Está Activa!",
+                trial_active_desc: "Prueba todas las funciones de Nexus ERP ahora mismo. Tu acceso expira en:",
+                trial_pay_note: "¿Te convenció? Realiza tu pago por Binance Pay o Pago Móvil y escríbenos al WhatsApp para fijar tu cuenta de por vida."
             },
             en: {
-                page_title: "Nexus ERP - The Autonomous Bot-Driven ERP",
+                page_title: "Nexus ERP - Autonomous ERP",
                 nav_features: "Features", nav_about: "About Us", nav_pricing: "Pricing", nav_isps: "ISPs & TV", nav_contact: "Contact",
-                m1: "🚀 Total Automation", m2: "🤖 24/7 Bot Ecosystem", m3: "💬 Telegram Integration", m4: "💰 Binance Pay", m5: "📊 Financial & Tax Control", m6: "☁️ Secure Cloud", m7: "📡 ISP Specialized Module",
+                m1: "🚀 Total Automation", m2: "🤖 24/7 Bot Ecosystem", m3: "💬 Billing & Cut Automation", m4: "💰 Binance Pay", m5: "📊 Financial & Tax Control", m6: "☁️ Secure Cloud", m7: "📡 Specialized ISPs & TV Module",
                 hero_title: "Your business on <span>autopilot</span>, with zero administrative friction.",
-                hero_desc: "The autonomous ERP managed by smart bots. Buy your license via Telegram, pay with Binance, select your country and let the system configure your accounting, inventory and automated cuts.",
-                btn_buy: "Get License", btn_more: "Learn More",
+                hero_desc: "The autonomous ERP managed by smart bots. Select your country, pay with Binance or test the system free for 25 minutes immediately.",
+                btn_buy: "Get License", btn_more: "Learn More", btn_buy_direct: "Get License",
                 feat_title: "Integrated Autonomous Ecosystem",
                 f1_title: "24/7 Operation Bots", f1_desc: "Automated fiscal accounting management adapted to your country's laws, warehouse control, and real-time inventory replenishment.",
                 f2_title: "Universal Loss Control", f2_desc: "Cross-cutting tracking of shrinkage, cash differences, waste, and hidden costs to secure business profitability from day one.",
                 f3_title: "Integrated Digital KOT", f3_desc: "Flexible option ideal for fast-food outlets, instantly connecting order intake with the kitchen and automatically deducting supplies.",
                 about_title: "Who We Are",
                 mission_title: "Our Mission", mission_desc: "Democratize high-level enterprise technology, empowering entrepreneurs and corporations with sophisticated yet simple and autonomous automation tools.",
-                vision_title: "Our Vision", vision_desc: "Become the leading intelligent ERP ecosystem in commercial and administrative agility, eliminating geographical and operational barriers across the region through Telegram and Binance.",
+                vision_title: "Our Vision", vision_desc: "Become the leading intelligent ERP ecosystem in commercial and administrative agility, eliminating geographical and operational barriers across the region.",
                 pricing_title: "Plans & Licenses",
                 p1_name: "Basic Plan", p1_desc: "Ideal for startups and local shops.",
                 p1_f1: "Basic accounting", p1_f2: "Simple inventory control", p1_f3: "Basic loss control", p1_f4: "Fast food order module option", p1_f5: "Automatic suspension for non-payment",
@@ -868,7 +987,7 @@
                 p2_f1: "Advanced accounting with tax compliance", p2_f2: "Warehouse with auto-replenishment", p2_f3: "Analytical loss control & audit", p2_f4: "Multiple users with permissions", p2_f5: "Automatic suspension for non-payment",
                 p3_name: "Platinum Plan", p3_desc: "Macro-operations, corporations and industry.",
                 p3_f1: "Complete autonomous bot ecosystem", p3_f2: "Macro production control", p3_f3: "Advanced logistics & dispatch routes", p3_f4: "Chain-wide macro loss control", p3_f5: "Automatic suspension for non-payment",
-                per_month: "/ mo", btn_telegram: "Buy via Telegram",
+                per_month: "/ mo",
                 isp_title: "Advanced Solution for ISPs & Subscription TV", isp_subtitle: "Billing Automation & Service Cuts",
                 isp_desc: "If your company provides internet or subscription TV, Nexus ERP manages subscriber registries, sends expiration alerts, executes automatic service suspension upon non-payment, and instantly restores it upon payment.",
                 isp_btn: "Inquire Integration",
@@ -876,22 +995,25 @@
                 contact_sub: "Fast assistance through our corporate support team.",
                 social_title: "Follow us on our communities and networks",
                 float_support: "💬 24/7 Support",
-                footer_text: "© 2026 Nexus ERP • Deseo Privado. All rights reserved. Operations backed by Telegram and Binance."
+                footer_text: "© 2026 Nexus ERP • Deseo Privado. All rights reserved. Direct payments via Binance Pay and Mobile Payment.",
+                trial_active_title: "🚀 Your Trial License Is Active!",
+                trial_active_desc: "Test all Nexus ERP features right now. Your access expires in:",
+                trial_pay_note: "Convinced? Make your payment via Binance Pay or Mobile Payment and write to us on WhatsApp to lock in your account."
             },
             zh: {
-                page_title: "Nexus ERP - 智能机器人驱动的自主企业资源计划系统",
+                page_title: "Nexus ERP - 自主企业资源计划系统",
                 nav_features: "功能特性", nav_about: "关于我们", nav_pricing: "价格许可", nav_isps: "ISP与电视", nav_contact: "联系我们",
-                m1: "🚀 全面自动化", m2: "🤖 7x24小时机器人生态系统", m3: "💬 纸飞机(Telegram)集成", m4: "💰 币安支付(Binance Pay)", m5: "📊 财务与税务控制", m6: "☁️ 安全云端", m7: "📡 ISP专业模块",
+                m1: "🚀 全面自动化", m2: "🤖 7x24小时机器人生态系统", m3: "💬 计费与切断自动化", m4: "💰 币安支付(Binance Pay)", m5: "📊 财务与税务控制", m6: "☁️ 安全云端", m7: "📡 ISP与电视专业模块",
                 hero_title: "让您的企业实现<span>自动驾驶</span>，零行政摩擦。",
-                hero_desc: "由智能机器人管理的自主ERP。通过Telegram购买许可证，使用币安支付，选择您的国家并让系统自动配置您的会计、库存和结算。",
-                btn_buy: "购买许可", btn_more: "了解更多",
+                hero_desc: "由智能机器人管理的自主ERP。选择国家，使用币安付款或立即免费试用25分钟。",
+                btn_buy: "购买许可", btn_more: "了解更多", btn_buy_direct: "获取许可",
                 feat_title: "集成自主生态系统",
                 f1_title: "7x24小时运营机器人", f1_desc: "适应您所在国家法律的自动化财务会计管理、仓库控制和实时库存补货。",
                 f2_title: "全方位损失控制", f2_desc: "跨业务追踪损耗、现金差异、浪费和隐藏成本，确保从第一天起就保障盈利能力。",
                 f3_title: "集成数字点餐系统", f3_desc: "快餐店的理想选择，瞬间将订单接收与厨房连接，并自动扣减库存物资。",
                 about_title: "关于我们",
                 mission_title: "我们的使命", mission_desc: "使高级企业技术民主化，为企业和机构提供复杂但极其简单且自主的自动化工具。",
-                vision_title: "我们的愿景", vision_desc: "通过Telegram和Binance的集成，成为商业和行政灵活性领域领先的智能ERP生态系统，消除整个地区的地理和运营障碍。",
+                vision_title: "我们的愿景", vision_desc: "成为商业和行政灵活性领域领先的智能ERP生态系统，消除整个地区的地理和运营障碍。",
                 pricing_title: "方案与许可",
                 p1_name: "基础方案", p1_desc: "非常适合初创企业和本地商户。",
                 p1_f1: "基础会计", p1_f2: "简单库存控制", p1_f3: "基础损失控制", p1_f4: "快餐点餐模块选项", p1_f5: "欠费自动暂停",
@@ -899,7 +1021,7 @@
                 p2_f1: "具备税务合规的高级会计", p2_f2: "自动补货仓库", p2_f3: "分析性损失控制与审计", p2_f4: "多用户权限管理", p2_f5: "欠费自动暂停",
                 p3_name: "白金方案", p3_desc: "宏观运营、跨国公司和工业。",
                 p3_f1: "完整的自主机器人生态系统", p3_f2: "宏观生产控制", p3_f3: "高级物流与派送路线", p3_f4: "全链条宏观损失控制", p3_f5: "欠费自动暂停",
-                per_month: "/ 月", btn_telegram: "通过Telegram购买",
+                per_month: "/ 月",
                 isp_title: "ISP及订阅电视的高级解决方案", isp_subtitle: "账单自动化与服务切断",
                 isp_desc: "如果您提供互联网或电视订阅服务，Nexus ERP可管理用户档案、发送到期提醒、在未付款时自动切断服务，并在客户缴费后瞬间恢复。",
                 isp_btn: "咨询集成",
@@ -907,11 +1029,14 @@
                 contact_sub: "通过我们的企业支持团队提供快速协助。",
                 social_title: "关注我们的社群与社交网络",
                 float_support: "💬 24/7 客服支持",
-                footer_text: "© 2026 Nexus ERP • Deseo Privado. 版权所有。运营受 Telegram 和 Binance 支持。"
+                footer_text: "© 2026 Nexus ERP • Deseo Privado. 版权所有。通过 Binance Pay 和移动支付直接付款。",
+                trial_active_title: "🚀 您的试用许可证已激活！",
+                trial_active_desc: "立即测试 Nexus ERP 的所有功能。您的访问权限将在此之后过期：",
+                trial_pay_note: "满意吗？通过 Binance Pay 或移动支付付款，并给我们发 WhatsApp 以永久锁定您的账户。"
             }
         };
 
-        // Rellenar otros idiomas de forma segura con inglés por defecto si faltan
+        // Rellenar idiomas restantes con inglés por defecto
         ['pt', 'fr', 'de', 'it', 'ja', 'ar', 'ru'].forEach(lang => {
             translations[lang] = translations.en;
         });
@@ -981,7 +1106,7 @@
             }
         }
 
-        // Ejecutar al cargar la página para verificar la promo y poner los precios
+        // Ejecutar al cargar la página
         window.onload = function() {
             checkPromoStatus();
             cambiarPais();
