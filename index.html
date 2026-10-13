@@ -782,7 +782,7 @@
                         <li data-i18n="p1_f5">Suspensión automática por impago</li>
                     </ul>
                 </div>
-                <a href="https://wa.me/584128910215?text=Hola,%20quiero%20adquirir%20el%20Plan%20Básico" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_buy_direct">Adquirir Licencia</a>
+                <a href="https://wa.me/584128910215?text=Hola,%20quiero%20adquirir%20el%20Plan%20Básico" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_whatsapp">Adquirir por WhatsApp</a>
             </div>
 
             <!-- Plan Premium -->
@@ -799,7 +799,7 @@
                         <li data-i18n="p2_f5">Suspensión automática por impago</li>
                     </ul>
                 </div>
-                <a href="https://wa.me/584128910215?text=Hola,%20quiero%20adquirir%20el%20Plan%20Premium" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_buy_direct">Adquirir Licencia</a>
+                <a href="https://wa.me/584128910215?text=Hola,%20quiero%20adquirir%20el%20Plan%20Premium" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_whatsapp">Adquirir por WhatsApp</a>
             </div>
 
             <!-- Plan Platinum -->
@@ -816,7 +816,7 @@
                         <li data-i18n="p3_f5">Suspensión automática por impago</li>
                     </ul>
                 </div>
-                <a href="https://wa.me/584128910215?text=Hola,%20quiero%20adquirir%20el%20Plan%20Platinum" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_buy_direct">Adquirir Licencia</a>
+                <a href="https://wa.me/584128910215?text=Hola,%20quiero%20adquirir%20el%20Plan%20Platinum" target="_blank" class="btn btn-primary" style="text-align: center;" data-i18n="btn_whatsapp">Adquirir por WhatsApp</a>
             </div>
         </div>
     </section>
@@ -894,20 +894,15 @@
             const trialKeyText = document.getElementById('trialKeyText');
             const whatsappBtn = document.getElementById('whatsappBtn');
 
-            // Generar clave temporal aleatoria
             const randomKey = "TRIAL-" + Math.floor(1000 + Math.random() * 9000) + "-VE";
             trialKeyText.innerText = randomKey;
 
-            // Actualizar enlace de WhatsApp con la clave generada
             whatsappBtn.href = `https://wa.me/584128910215?text=Hola,%20estoy%20probando%20el%20sistema%20con%20mi%20clave%20temporal%20${randomKey}%20y%20quiero%20hacer%20el%20pago`;
 
-            // Mostrar el panel de prueba
             trialBox.style.display = 'block';
             trialBox.scrollIntoView({ behavior: 'smooth' });
 
-            // Configurar tiempo en segundos (25 minutos = 1500 segundos)
             let tiempoRestante = 1500;
-
             if (window.trialInterval) clearInterval(window.trialInterval);
 
             window.trialInterval = setInterval(() => {
@@ -930,7 +925,7 @@
             }, 1000);
         }
 
-        // Diccionario de Traducciones Multi-idioma
+        // Diccionario de Traducciones Multi-idioma con precios limpios y sin Telegram
         const translations = {
             es: {
                 page_title: "Nexus ERP - El ERP Autónomo impulsado por Bots",
@@ -938,7 +933,7 @@
                 m1: "🚀 Automatización Total", m2: "🤖 Ecosistema de Bots 24/7", m3: "💬 Gestión de Cobros y Cortes", m4: "💰 Pagos con Binance Pay", m5: "📊 Control Financiero y Fiscal", m6: "☁️ Nube Segura", m7: "📡 Módulo Especializado ISPs y TV",
                 hero_title: "Tu empresa en <span>piloto automático</span>, sin fricción administrativa.",
                 hero_desc: "El ERP autónomo gestionado por bots inteligentes. Selecciona tu país, realiza tu pago con Binance o prueba el sistema gratis por 25 minutos de inmediato.",
-                btn_buy: "Comprar Licencia", btn_more: "Conocer Más", btn_buy_direct: "Adquirir Licencia",
+                btn_buy: "Comprar Licencia", btn_more: "Conocer Más", btn_whatsapp: "Adquirir por WhatsApp",
                 feat_title: "Ecosistema Autónomo Integrado",
                 f1_title: "Bots de Operación 24/7", f1_desc: "Gestión automatizada de contabilidad fiscal adaptada a las leyes de tu país, control de almacén y reposición de inventario en tiempo real.",
                 f2_title: "Control Universal de Pérdidas", f2_desc: "Rastreo transversal de mermas, diferencias en caja, desperdicios y costos ocultos para blindar la rentabilidad de tu negocio desde el día uno.",
@@ -972,7 +967,7 @@
                 m1: "🚀 Total Automation", m2: "🤖 24/7 Bot Ecosystem", m3: "💬 Billing & Cut Automation", m4: "💰 Binance Pay", m5: "📊 Financial & Tax Control", m6: "☁️ Secure Cloud", m7: "📡 Specialized ISPs & TV Module",
                 hero_title: "Your business on <span>autopilot</span>, with zero administrative friction.",
                 hero_desc: "The autonomous ERP managed by smart bots. Select your country, pay with Binance or test the system free for 25 minutes immediately.",
-                btn_buy: "Get License", btn_more: "Learn More", btn_buy_direct: "Get License",
+                btn_buy: "Get License", btn_more: "Learn More", btn_whatsapp: "Get via WhatsApp",
                 feat_title: "Integrated Autonomous Ecosystem",
                 f1_title: "24/7 Operation Bots", f1_desc: "Automated fiscal accounting management adapted to your country's laws, warehouse control, and real-time inventory replenishment.",
                 f2_title: "Universal Loss Control", f2_desc: "Cross-cutting tracking of shrinkage, cash differences, waste, and hidden costs to secure business profitability from day one.",
@@ -1006,7 +1001,7 @@
                 m1: "🚀 全面自动化", m2: "🤖 7x24小时机器人生态系统", m3: "💬 计费与切断自动化", m4: "💰 币安支付(Binance Pay)", m5: "📊 财务与税务控制", m6: "☁️ 安全云端", m7: "📡 ISP与电视专业模块",
                 hero_title: "让您的企业实现<span>自动驾驶</span>，零行政摩擦。",
                 hero_desc: "由智能机器人管理的自主ERP。选择国家，使用币安付款或立即免费试用25分钟。",
-                btn_buy: "购买许可", btn_more: "了解更多", btn_buy_direct: "获取许可",
+                btn_buy: "购买许可", btn_more: "了解更多", btn_whatsapp: "通过WhatsApp购买",
                 feat_title: "集成自主生态系统",
                 f1_title: "7x24小时运营机器人", f1_desc: "适应您所在国家法律的自动化财务会计管理、仓库控制和实时库存补货。",
                 f2_title: "全方位损失控制", f2_desc: "跨业务追踪损耗、现金差异、浪费和隐藏成本，确保从第一天起就保障盈利能力。",
@@ -1051,9 +1046,11 @@
                     el.innerHTML = t[key];
                 }
             });
+            // Refrescar precios al cambiar de idioma para que mantengan la moneda correcta
+            cambiarPais();
         }
 
-        // Lógica de cambio de país y monedas con el 50% de descuento aplicado ($7.50, $22.50, $60.00 base)
+        // Lógica limpia y directa de cambio de país y monedas con el 50% de descuento ($7.50, $22.50, $60.00 base)
         function cambiarPais() {
             const selector = document.getElementById('countrySelector');
             const pais = selector.value;
@@ -1114,4 +1111,3 @@
     </script>
 </body>
 </html>
-
